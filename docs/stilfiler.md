@@ -162,6 +162,32 @@ till ortnamnsnedladdningen är den del av stilen som bara beror på
 inte den del som beror på per-objekt-placeringsdata som ortnamnsnedladdningen
 saknar.
 
+**Skalbegränsning tillagd i efterhand (QGIS hängde sig):** varken Topo10:s
+originalstil eller den första versionen av `ortnamn_ortnamn.qml` hade någon
+skalbaserad synlighet på etiketterna (`scaleVisibility="0"` på alla regler,
+även i Lantmäteriets egen fil). Det märks inte vid en normal inzoomad vy
+(några hundra objekt), men blir ett akut prestandaproblem när man zoomar ut
+till en hel läns utbredning - t.ex. Stockholms län med 53 668 objekt tog
+QGIS main-tråden i anspråk i flera minuter (upplevdes av användaren som att
+"QGIS hänger", vilket det praktiskt taget gjorde: `QgsMapRendererParallelJob`
+för hela länets utbredning tog över två minuter innan PAL:s
+platsplaceringsalgoritm var klar). Detta fanns latent redan i den
+ostyckade `ortnamn`-filen också, men blev mycket lättare att råka ut för
+med länsfiler, eftersom "zooma till lagrets utbredning" på en ny fil då
+visar hela länet på en gång.
+
+Löst genom att sätta en skalbegränsning per regel
+(`s.minimumScale = 200000`, `s.maximumScale = 1` - i XML:en motsvarar det
+`scaleMax="200000"` respektive `scaleMin="1"`, **omvänt** mot vad
+attributnamnen antyder; QGIS namnger dessa XML-attribut och sina egna
+Python-egenskaper `minimumScale`/`maximumScale` åt olika håll av historiska
+skäl, verifierat empiriskt genom att rendera samma vy med olika
+värdekombinationer snarare än att gissa). Etiketter visas nu bara vid skala
+1:200 000 eller mer inzoomat - motsvarande hur en tryckt topografisk karta
+aldrig visar alla ortnamn på en översiktskarta över ett helt län heller.
+Full läns-utbredning renderas nu på under en sekund (tidigare >2 minuter),
+och en normal inzoomad vy är opåverkad.
+
 **Hur den slutgiltiga `ortnamn_ortnamn.qml` togs fram** (skiljer sig från
 metoden i avsnittet nedan, eftersom `QgsRuleBasedLabeling`s Python-API visade
 sig vara opålitligt att bygga om för hand - se varning nedan): `renderer-v2`-

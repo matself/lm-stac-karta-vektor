@@ -4,6 +4,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `ortnamn_ortnamn.qml` had no scale-based label visibility (matching
+  Lantmäteriet's own Topo10 style, which doesn't restrict it either), so
+  PAL attempted to place a label for every feature in view regardless of
+  zoom level. Fine at a normal zoomed-in view, but rendering a whole
+  län's worth of features at once (e.g. Stockholms län, 53 668 objekt)
+  locked QGIS's main thread for minutes - reported as "QGIS hänger" after
+  the per-län split below made it much easier to trigger (a new file's
+  first view is naturally "zoom to extent" = the whole län at once). Added
+  a minimum visibility scale (labels only render at 1:200 000 or more
+  zoomed in) matching how a printed topographic map would behave anyway.
+  Full-län renders now take well under a second; a normal zoomed-in view is
+  unaffected. See [docs/stilfiler.md](docs/stilfiler.md).
+
 ### Added
 
 - Optional per-län split for `ortnamn`: a new "Dela upp ortnamn per län (en
