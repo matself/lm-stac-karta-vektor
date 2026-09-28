@@ -152,9 +152,5 @@ sparas säkert.
 
 ## Kända begränsningar
 
-- En `.zip`-tillgång antas innehålla en enda GeoPackage/ett enda lager per
-  fil, vilket stämmer med hur Lantmäteriets vektorprodukter paketeras
-  idag. Ett flerlagers-GPKG i zip-arkivet öppnas bara med sitt första
-  lager.
 - Sökning är begränsad till 1000 träffar.
 - STAC-karta erbjuds inte, se förklaringen i README.

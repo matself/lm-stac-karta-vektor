@@ -183,10 +183,6 @@ Requires QGIS 3.44 or later (the OAuth2 Client Credentials flow in
 
 ## Known limitations
 
-- A `.zip` asset is assumed to contain a single GeoPackage/layer per file
-  (how Lantmäteriet's vector products are packaged today). A multi-layer
-  GeoPackage inside the zip is only opened with its first layer by
-  `QgsVectorLayer`.
 - Search is capped at 1000 hits; narrow the area or the time filter if
   truncated.
 - No automated test framework is set up; verification is done by running

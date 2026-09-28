@@ -4,6 +4,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `fastighetsindelning` (and any other multi-layer GeoPackage, e.g. separate
+  point/line/polygon tables) only had its first layer added to the project;
+  `_add_vector` now enumerates every vector sublayer via
+  `QgsProviderRegistry.querySublayers` and adds each one.
+- Träffar (hits) stayed visible after changing which collections were
+  checked, without touching the service - easy to miss re-clicking Sök and
+  end up downloading stale results. The hits are now cleared as soon as the
+  collection selection changes, not only on a service switch (see below).
+- Träffar (hits) kept showing the previous service's results after
+  switching service, since only the collection list was reloaded. Now
+  cleared immediately, and any in-flight collections/search task for the
+  old service is cancelled so a late response can't repopulate it.
+
 ### Added
 
 - Initial version of the QGIS plugin "Geodata Downloader (Lantmäteriet) -
@@ -23,13 +38,6 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   dialog and message, required for plugins.qgis.org review. A Swedish user
   guide (`docs/anvandning.md`) covers the full walkthrough for end users.
 - `changelog` and `qgisMaximumVersion=4.99` fields in `metadata.txt`.
-
-### Fixed
-
-- Träffar (hits) kept showing the previous service's results after
-  switching service, since only the collection list was reloaded. Now
-  cleared immediately, and any in-flight collections/search task for the
-  old service is cancelled so a late response can't repopulate it.
 
 ### Changed
 

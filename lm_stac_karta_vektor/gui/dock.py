@@ -20,6 +20,7 @@ from qgis.core import (
     QgsApplication,
     QgsCoordinateReferenceSystem,
     QgsProject,
+    QgsProviderRegistry,
     QgsRasterLayer,
     QgsRectangle,
     QgsSettings,
@@ -164,6 +165,7 @@ class StacDock(QDockWidget):
         self.collections_list = QListWidget()
         self.collections_list.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
         self.collections_list.setMaximumHeight(110)
+        self.collections_list.itemChanged.connect(self._clear_results)
         layout.addWidget(self.collections_list)
 
         self.extent_group = QgsExtentGroupBox()
@@ -323,6 +325,7 @@ class StacDock(QDockWidget):
         self._message(f"Kunde inte hämta samlingar: {error}", Qgis.MessageLevel.Warning)
 
     def _on_collections_completed(self, collections: list) -> None:
+        self.collections_list.blockSignals(True)
         self.collections_list.clear()
         for collection in collections:
             label = f"{collection.get('title') or collection['id']} ({collection['id']})"
@@ -331,6 +334,7 @@ class StacDock(QDockWidget):
             item.setCheckState(Qt.CheckState.Unchecked)
             item.setData(Qt.ItemDataRole.UserRole, collection["id"])
             self.collections_list.addItem(item)
+        self.collections_list.blockSignals(False)
 
     def _selected_collection_ids(self) -> list[str]:
         ids = []
@@ -580,8 +584,31 @@ class StacDock(QDockWidget):
 
     @staticmethod
     def _add_vector(path: str, project: QgsProject, failures: list) -> None:
-        layer = QgsVectorLayer(path, Path(path).stem, "ogr")
-        if layer.isValid():
-            project.addMapLayer(layer)
-        else:
-            failures.append(f"{Path(path).name}: kunde inte öppnas som vektorlager")
+        # A vector container such as GeoPackage can hold several layers (e.g.
+        # separate point/line/polygon tables in fastighetsindelning) - add
+        # every one instead of just whichever QgsVectorLayer would default to.
+        try:
+            sublayers = QgsProviderRegistry.instance().querySublayers(path)
+        except Exception:  # pragma: no cover - defensive, provider quirks vary
+            sublayers = []
+        vector_sublayers = [s for s in sublayers if s.type() == Qgis.LayerType.Vector]
+
+        if not vector_sublayers:
+            layer = QgsVectorLayer(path, Path(path).stem, "ogr")
+            if layer.isValid():
+                project.addMapLayer(layer)
+            else:
+                failures.append(f"{Path(path).name}: kunde inte öppnas som vektorlager")
+            return
+
+        stem = Path(path).stem
+        multiple = len(vector_sublayers) > 1
+        for sublayer in vector_sublayers:
+            name = f"{stem} - {sublayer.name()}" if multiple else stem
+            layer = QgsVectorLayer(sublayer.uri(), name, sublayer.providerKey())
+            if layer.isValid():
+                project.addMapLayer(layer)
+            else:
+                failures.append(
+                    f"{Path(path).name} ({sublayer.name()}): kunde inte öppnas som vektorlager"
+                )
