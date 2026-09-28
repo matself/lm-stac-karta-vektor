@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-PLUGIN_NAME = "Geodata Downloader – Karta/Vektor (Lantmäteriet)"
+PLUGIN_NAME = "Geodata Downloader (Lantmäteriet) - STAC-vektor"
 SETTINGS_PREFIX = "lm_stac_karta_vektor"
 
 API_URL = "https://api.lantmateriet.se"
@@ -44,9 +44,9 @@ _ALL_SERVICES = {
 SERVICES = {k: v for k, v in _ALL_SERVICES.items() if k != "stac-karta"}
 DEFAULT_SERVICE = "stac-vektor"
 
-# Nationell militär karta (nmk50, nmk250) är behörighetsskyddad och kräver
-# ett systemkonto med särskild beställning - den går inte att ladda ned med
-# vanlig STAC-åtkomst och döljs därför i gränssnittet.
+# Nationell militär karta (nmk50, nmk250) is access-restricted and requires
+# a system account with a separate order - it can't be downloaded through
+# plain STAC access, so it's hidden from the interface.
 RESTRICTED_COLLECTIONS = {"nmk50", "nmk250"}
 
 

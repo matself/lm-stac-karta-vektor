@@ -28,7 +28,7 @@ class StacItem:
     @property
     def extension(self) -> str:
         name = self.filename.lower()
-        return name[name.rfind(".") :] if "." in name else ""
+        return name[name.rfind("."):] if "." in name else ""
 
     @property
     def kind(self) -> str:
