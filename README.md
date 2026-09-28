@@ -144,16 +144,26 @@ Turn it back on by removing the filter in `config.py`
 if Lantmäteriet starts tiling `topowebb` or otherwise makes STAC-karta
 suitable for a search-and-download interface.
 
-## Official styling
+## Styling
 
 When "Lägg till i projektet när klart" is checked, downloaded layers are
-styled with Lantmäteriet's own official QGIS symbology, extracted from the
-`.qlr` manér file published on the product's Geotorget documentation page
+styled from a bundled `.qml` per collection/table
 (`lm_stac_karta_vektor/styles/{collection}_{table}.qml`, applied via
 `core/styles.py`, matching the sibling plugin's approach). Only symbology
 and labeling are applied, not fields/forms, and the style is also saved
 into the GeoPackage's own `layer_styles` table so the file stays styled
 even opened without this plugin later.
+
+For `fastighetsindelning` and `marktacke` this is Lantmäteriet's own
+official QGIS symbology, extracted from the `.qlr` manér file published on
+each product's Geotorget documentation page. No such file exists for
+`kommun-lan-rike` (it's a newer NGP "Test"-status product without a
+published style package - see [docs/stilfiler.md](docs/stilfiler.md) for
+what was checked before concluding that), so its style is a simple
+self-designed one instead: magenta outline-only polygons differentiated by
+line pattern per level (solid/dashed/dash-dot for rike/lan/kommun), loosely
+matching how Lantmäteriet's own Min Karta viewer draws administrative
+boundaries, with `lan`/`kommun` labelled by name.
 
 Each download also gets its own group in the layer tree (e.g.
 `marktacke_kn1270`), with its layers ordered inside that group to match
@@ -167,8 +177,12 @@ Currently covers:
 
 - `fastighetsindelning` (all 6 geometry tables: `granspunkt`,
   `registerenhetsomradespunkt`, `registerenhetsomradeslinje`,
-  `registerenhetsomradesgrans`, `traktyta`, `registerenhetsomradesyta`)
-- `marktacke` (all 3 tables: `mark`, `markkantlinje`, `sankmark`)
+  `registerenhetsomradesgrans`, `traktyta`, `registerenhetsomradesyta`) -
+  official Lantmäteriet style
+- `marktacke` (all 3 tables: `mark`, `markkantlinje`, `sankmark`) -
+  official Lantmäteriet style
+- `kommun-lan-rike` (all 3 tables: `kommun`, `lan`, `rike`) - self-designed,
+  no official style exists
 
 Other collections fall back to QGIS' default style until a matching QML is
 added - see [docs/stilfiler.md](docs/stilfiler.md) for where the current

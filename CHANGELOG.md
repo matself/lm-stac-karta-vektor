@@ -6,6 +6,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Self-designed styling for `kommun-lan-rike` (`kommun`, `lan`, `rike`
+  polygon tables): magenta outline-only polygons, solid/dashed/dash-dot
+  line pattern per level, `lan`/`kommun` labelled by name. No official
+  Lantmäteriet style exists for this collection - it's an NGP
+  "Test"-status product without a published manér package, unlike
+  `fastighetsindelning`/`marktacke`. Checked and ruled out: the old
+  outgoing Fastighetsindelning schema's bundled `kommunyta`/`lansyta`
+  layers (different, discontinued schema) and `Topografi10_vektor_260605.qlr`
+  (44 layers, no admin-boundary layer at all). See
+  [docs/stilfiler.md](docs/stilfiler.md).
 - `build.py` and `plugins.xml`: builds `dist/lm_stac_karta_vektor.<version>.zip`
   (via `git archive`, so only committed files) and a self-hosted plugin
   repository, matching the sibling plugins' release process. See "New

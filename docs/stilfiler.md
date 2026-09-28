@@ -60,6 +60,48 @@ mot en riktig nedladdning (redan öppen i användarens QGIS-projekt,
 `marktacke_mark.qml` refererar `LMTopografisymboler` (samma font som
 fastighetsindelning), de andra två gör det inte.
 
+## Kommun, län och rike - egen stil (inget officiellt manér finns)
+
+Till skillnad från de två ovan finns **ingen** officiell manérfil för
+`kommun-lan-rike`. Undersökt grundligt innan detta drogs som slutsats:
+
+- Den gamla (2021.10, utgående) GEODOK/28-sidan för Fastighetsindelning
+  hade lagren "Kommuner" (`kommunyta`) och "Län" (`lansyta`) inbakade, men
+  det är ett annat, numera avvecklat schema (se ovan) - inte samma data.
+- `Topografi10_vektor_260605.qlr` (användarens fråga: "hade topo10
+  kommungränser?") innehåller 44 lager (vägar, byggnader, hydrografi,
+  terräng, marktäcke ...) men **inget** kommun-/län-/rikeslager alls.
+- Produktsidan för `Kommun, Län och Rike Nedladdning`
+  (`geotorget.lantmateriet.se/geodataprodukter/kommun-lan-rike-nedladdning-api`)
+  nämner varken manérfil, QLR eller symbolfil någonstans i sin
+  dokumentation. Den är en **Nationella geodataplattformen (NGP)**-produkt
+  med specifikationsstatus "Test" - en annan, nyare produktfamilj än de
+  klassiska "Nedladdning"-produkterna (som Fastighetsindelning/Marktäcke)
+  som kommer med ett fullständigt manérpaket (QLR + LYR/LYRX + symbolfont).
+
+Stilen i `kommun-lan-rike_{kommun,lan,rike}.qml` är därför **självbyggd**,
+inte extraherad ur ett Lantmäteriet-manér. Verifierad mot en riktig
+nedladdning (`kommun-lan-rike_aktuell.gpkg`, tre tabeller: `kommun` 290
+objekt, `lan` 21 objekt, `rike` 1 objekt - stämmer med Sveriges faktiska
+antal). Utseendet är inspirerat av hur Lantmäteriets egen webbvisare Min
+Karta ritar administrativa gränser (skärmdump från användaren:
+heldragen linje med tvärstreck = riksgräns, streckad = länsgräns,
+streck-prick-prick = kommungräns) men är en förenklad approximation, inte
+en pixelexakt kopia:
+
+- Genomgående magenta/rosa kontur (`#c500a1`), ingen fyllning.
+- `rike`: heldragen linje, 0.6 mm.
+- `lan`: streckad linje, 0.4 mm.
+- `kommun`: streck-prick-linje, 0.3 mm.
+- Etikett med `namnkortform`-attributet för `lan` och `kommun` (inte
+  `rike`, eftersom det bara är ett enda polygon-objekt).
+
+Byggdes direkt i QGIS via `QgsSimpleFillSymbolLayer`/`QgsFillSymbol`/
+`QgsPalLayerSettings` och `saveNamedStyle()`, inte genom att tolka en
+extern fil - se `DRAW_ORDER["kommun-lan-rike"]` i `core/styles.py` för
+skiktordningen (mindre enheter ovanpå större: kommun, sedan län, sedan
+rike underst).
+
 ## Hur QML-filerna togs fram
 
 QLR-filen innehåller alla lager i en enda fil (ett `layer-tree-group` plus

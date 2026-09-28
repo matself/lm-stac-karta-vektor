@@ -115,11 +115,12 @@ området eller tidsfiltret.
    nedladdade lagren ska läggas till i QGIS-projektet automatiskt när
    nedladdningen är klar. Vektordata levereras som `.zip`-filer som
    pluginet packar upp automatiskt och letar efter GeoPackage-/Shapefile-/
-   GML-lager i. Lager som pluginet har en officiell Lantmäteriet-stil för
-   (just nu Fastighetsindelnings sex geometriskikt och Marktäckes tre)
-   manérsätts automatiskt samma sätt som Lantmäteriets egen QGIS-manérfil -
-   se [stilfiler.md](stilfiler.md) för detaljer och vilken symbolfont som
-   bundlas för det.
+   GML-lager i. Lager som pluginet har en stil för (just nu
+   Fastighetsindelnings sex geometriskikt och Marktäckes tre manérsätts
+   likadant som Lantmäteriets egen QGIS-manérfil; Kommun/län/rikes tre
+   skikt får en egen enkel stil, eftersom Lantmäteriet inte publicerar
+   någon manérfil för den samlingen) läggs till redan stilsatta - se
+   [stilfiler.md](stilfiler.md) för detaljer.
 4. Klicka **Hämta valda**. Är den sammanlagda storleken över 2 GB frågar
    pluginet om bekräftelse innan nedladdningen startar.
 5. En förloppsindikator visar aktuell fil och hur mycket som laddats ned.

@@ -45,6 +45,10 @@ DRAW_ORDER: dict[str, list[str]] = {
         "registerenhetsomradesyta",
     ],
     "marktacke": ["markkantlinje", "sankmark", "mark"],
+    # No official Lantmäteriet QLR exists for this collection (see
+    # docs/stilfiler.md) - smaller units on top of bigger ones, same
+    # principle as the other collections above.
+    "kommun-lan-rike": ["kommun", "lan", "rike"],
 }
 
 
