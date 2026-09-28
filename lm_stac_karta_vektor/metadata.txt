@@ -27,6 +27,7 @@ homepage=https://github.com/matself/lm-stac-karta-vektor
 category=Web
 icon=icon.svg
 tags=lantmateriet,stac,geodata,download,nedladdning,karta,vektor,öppna data,geotorget
+license=GPL-3.0-or-later
 
 experimental=True
 deprecated=False
