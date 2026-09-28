@@ -6,12 +6,15 @@ version=0.1.0
 author=Mats Elfström
 email=mats.elfstrom@gmail.com
 
-about=Sök och ladda ned data direkt från Lantmäteriets STAC-tjänster: STAC-karta
-    (rasterkartor, t.ex. Topografisk webbkarta) och STAC-vektor (vektordata:
+about=Sök och ladda ned data direkt från Lantmäteriets STAC-vektor (vektordata:
     Byggnader, Marktäcke, Fastighetsindelning, Belägenhetsadresser, Ortnamn samt
     Kommun/län/rike). Fristående plugin, inte utvecklat av Lantmäteriet. Systerplugin
     till Geodata Downloader (Lantmäteriet), som täcker ortofoto och höjddata.
-    Nationell militär karta (nmk50/nmk250) är behörighetsskyddad och visas inte.
+    STAC-karta stöds inte för närvarande: dess enda öppna samling (topowebb) är
+    inte indelad i rutor utan svarar med hela landet som fyra 145-175 GB-filer
+    oavsett sökområde, och Lantmäteriets egen Geotorget-sida för produkten
+    hänvisar till en FTP-plats i stället för API-beställning. Övriga samlingar i
+    STAC-karta är behörighetsskyddad militärkarta.
     Sökning fungerar med valfri giltig nyckel; nedladdning kräver ett systemkonto
     som beställt rätt produkt på Geotorget. Inloggning sker via QGIS egen
     autentiseringshanterare (OAuth2 client credentials) - pluginet lagrar inga

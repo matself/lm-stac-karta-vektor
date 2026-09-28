@@ -4,6 +4,19 @@ Format baserat på [Keep a Changelog](https://keepachangelog.com/sv/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Disabled STAC-karta in the service picker (`SERVICES` in `config.py`).
+  Live investigation of `GET /collections/{id}` showed its one open
+  collection, `topowebb`, has a global (`-180…180`) collection extent and
+  returns the same 4 items (145-175 GB each, one per style/projection
+  variant of the whole country) for any search bbox - it isn't tiled by
+  area at all, so a search-and-download UI is the wrong tool for it. Its
+  Geotorget product page confirms this: "Produkten går inte att beställa i
+  Geotorget", pointing to an FTP mirror instead. Its other two collections
+  (nmk50/nmk250) were already excluded as access-restricted. Reversible via
+  a one-line change in `config.py` if Lantmäteriet changes this.
+
 ### Added
 
 - Initial version of the QGIS plugin "Geodata Downloader – Karta/Vektor

@@ -3,10 +3,10 @@
 Ett fristående QGIS-plugin (inte utvecklat av Lantmäteriet) för att söka och
 ladda ned öppna geodata från Lantmäteriets STAC-tjänster:
 
-- **STAC-karta** — rasterkartor (Topografisk webbkarta m.fl. — se
-  [Behörighetsskyddade kartor](#behörighetsskyddade-kartor) nedan).
 - **STAC-vektor** — vektordata (Byggnader, Marktäcke, Fastighetsindelning,
   Belägenhetsadresser, Ortnamn, Kommun/län/rike).
+- **STAC-karta** — avstängd tills vidare, se
+  [STAC-karta är avstängd](#stac-karta-är-avstängd) nedan.
 
 Systerplugin till [`matself/LM-STAC-Downloader`](https://github.com/matself/LM-STAC-Downloader)
 ("Geodata Downloader (Lantmäteriet)"), som täcker ortofoto och höjddata
@@ -29,33 +29,53 @@ hämtar/förnyar token automatiskt via `authcfg`.
 Verifierat mot de faktiska produktions-URL:erna (2026-09-28):
 
 ```
-GET  https://api.lantmateriet.se/stac-karta/v1/collections    -> 200, inget Authorization-huvud krävs
-GET  https://api.lantmateriet.se/stac-karta/v1/search?...     -> 200, inget Authorization-huvud krävs
-GET  https://dl1.lantmateriet.se/.../nmk250_61_4.tif           -> 401 Unauthorized (utan uppgifter)
+GET  https://api.lantmateriet.se/stac-vektor/v1/collections   -> 200, inget Authorization-huvud krävs
+GET  https://api.lantmateriet.se/stac-vektor/v1/search?...    -> 200, inget Authorization-huvud krävs
+GET  https://dl1.lantmateriet.se/byggnadsverk/byggnad_*.zip    -> 401 Unauthorized (utan uppgifter)
 ```
 
 Det vill säga: **att bläddra i kataloger och söka fungerar utan inloggning**
-(både `/collections` och `/search` svarar publikt på båda tjänsterna). Det är
-först **den faktiska filnedladdningen** (`dl1.lantmateriet.se`) som kräver
-autentisering — och det gäller i första hand skyddade produkter (se nedan).
-Sökning kan alltså göras utan att ha skapat en inloggning i pluginet; ladda
-ned genom att först klicka **Ny Lantmäteriet-inloggning…** och ange Consumer
-Key/Secret för ett systemkonto som beställt rätt nedladdningsprodukt på
+(`/collections` och `/search` svarar publikt). Det är först **den faktiska
+filnedladdningen** (`dl1.lantmateriet.se`) som kräver autentisering. Sökning
+kan alltså göras utan att ha skapat en inloggning i pluginet; ladda ned genom
+att först klicka **Ny Lantmäteriet-inloggning…** och ange Consumer Key/Secret
+för ett systemkonto som beställt rätt nedladdningsprodukt på
 [Geotorget](https://geotorget.lantmateriet.se/).
 
-## Behörighetsskyddade kartor
+Live-verifierat med riktiga nycklar: ett konto med STAC-vektor beställt fick
+`403 Forbidden` (autentiserat men inte behörigt) på `byggnader` men lyckades
+hämta, packa upp och lägga till `belagenhetsadresser` som lager — dvs.
+entitlement kontrolleras per samling, inte bara per tjänst.
 
-**Nationell militär karta** (samlingarna `nmk50` och `nmk250` i STAC-karta)
-är behörighetsskyddad och kräver ett systemkonto med särskild beställning.
-Pluginet filtrerar bort dessa två samlingar helt (`RESTRICTED_COLLECTIONS` i
-[`config.py`](lm_stac_karta_vektor/config.py)) — de visas varken i
-samlingslistan eller i sökresultat, så att man inte råkar försöka ladda ned
-data man inte har åtkomst till. Övriga samlingar i STAC-karta (t.ex.
-Topografisk webbkarta) och samtliga i STAC-vektor är öppna data.
+## STAC-karta är avstängd
+
+STAC-karta erbjuds inte i gränssnittet just nu (`SERVICES` i
+[`config.py`](lm_stac_karta_vektor/config.py) utesluter den uttryckligen) —
+ingen av dess tre samlingar går att hämta meningsfullt genom pluginet:
+
+- **`nmk50`/`nmk250`** (Nationell militär karta) är behörighetsskyddade och
+  kräver ett systemkonto med särskild beställning — samma sak som gör att
+  de aldrig visas i samlingslistan även om STAC-karta slås på igen
+  (`RESTRICTED_COLLECTIONS`).
+- **`topowebb`** (CC-BY-4.0, den enda öppna samlingen) är **inte indelad i
+  rutor**: `GET /collections/topowebb` rapporterar hela jordklotet som
+  utbredning, och en sökning på en bbox i Kiruna gav exakt samma fyra träffar
+  som en sökning i Skåne — samma fyra hela-Sverige-filer (145–175 GB var,
+  en per stil-/projektionsvariant) oavsett var man söker. Lantmäteriets egen
+  Geotorget-sida för produkten säger uttryckligen att den inte går att
+  beställa där och hänvisar i stället till en FTP-plats
+  (`ftp://download-opendata.lantmateriet.se/`) — dvs. den är inte tänkt att
+  hämtas via API:et i nuläget.
+
+Slå på den igen genom att ta bort filtreringen i `config.py`
+(`SERVICES = {k: v for k, v in _ALL_SERVICES.items() if k != "stac-karta"}`)
+om Lantmäteriet börjar dela upp `topowebb` i rutor eller på annat sätt gör
+STAC-karta lämplig för ett sök-och-hämta-gränssnitt.
 
 ## Katalogstruktur (STAC)
 
-Båda tjänsterna följer STAC/OGC API - Features:
+Båda tjänsterna följer STAC/OGC API - Features (även STAC-karta, som
+tillsvidare är avstängd i gränssnittet, se ovan):
 
 - `GET /collections` — listar samlingar.
 - `POST /search` — sök objekt (`collections`, `bbox`, `datetime`, `limit`),

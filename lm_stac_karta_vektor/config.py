@@ -25,11 +25,24 @@ class Service:
     path: str
 
 
-SERVICES = {
+_ALL_SERVICES = {
     "stac-karta": Service("stac-karta", "STAC-karta (raster)", "/stac-karta/v1"),
     "stac-vektor": Service("stac-vektor", "STAC-vektor (vektor)", "/stac-vektor/v1"),
 }
-DEFAULT_SERVICE = "stac-karta"
+
+# STAC-karta is disabled: none of its collections can usefully be fetched
+# through this plugin right now. nmk50/nmk250 are access-restricted military
+# maps (see RESTRICTED_COLLECTIONS below). Its one open collection, topowebb
+# (CC-BY-4.0), isn't tiled by area at all - GET /collections/topowebb reports
+# a global bbox, and searching it from anywhere in Sweden returns the same 4
+# items (145-175 GB each, one per style/projection variant of the whole
+# country). Lantmäteriet's own Geotorget product page for it says the
+# product can't be ordered there and points to a plain FTP mirror instead
+# (ftp://download-opendata.lantmateriet.se/) - i.e. it isn't meant to be
+# fetched through the STAC API yet. Flip this back to _ALL_SERVICES (or add
+# "stac-karta" back in) if that changes.
+SERVICES = {k: v for k, v in _ALL_SERVICES.items() if k != "stac-karta"}
+DEFAULT_SERVICE = "stac-vektor"
 
 # Nationell militär karta (nmk50, nmk250) är behörighetsskyddad och kräver
 # ett systemkonto med särskild beställning - den går inte att ladda ned med
