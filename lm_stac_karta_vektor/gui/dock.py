@@ -69,6 +69,7 @@ from ..core.items import (
     RASTER_EXTENSIONS,
     StacItem,
 )
+from ..core.split import SPLITTABLE, split_by_lan
 from ..core.styles import apply_style, sort_by_draw_order
 from ..core.task import CollectionsTask, SearchTask
 from .auth_dialog import CreateAuthDialog
@@ -244,6 +245,13 @@ class StacDock(QDockWidget):
         self.add_to_project.setChecked(True)
         layout.addWidget(self.add_to_project)
 
+        # ortnamn is the one collection Lantmäteriet delivers as a single
+        # nationwide file (~989 000 objekt) instead of one file per kommun -
+        # see core/split.SPLITTABLE and docs/stilfiler.md.
+        self.split_ortnamn = QCheckBox("Dela upp ortnamn per län (en fil per län)")
+        self.split_ortnamn.setChecked(False)
+        layout.addWidget(self.split_ortnamn)
+
         self.download_btn = QPushButton("Hämta valda")
         self.download_btn.clicked.connect(self._start_download)
         layout.addWidget(self.download_btn)
@@ -271,11 +279,13 @@ class StacDock(QDockWidget):
         service = self.settings.value(self._key("service"), DEFAULT_SERVICE)
         self.service_combo.setCurrentIndex(max(0, self.service_combo.findData(service)))
         self.output_widget.setFilePath(self.settings.value(self._key("output"), str(Path.home())))
+        self.split_ortnamn.setChecked(self.settings.value(self._key("split_ortnamn"), False, type=bool))
 
     def _save_settings(self) -> None:
         self.settings.setValue(self._key("authcfg"), self.auth_select.configId())
         self.settings.setValue(self._key("service"), self.service_combo.currentData())
         self.settings.setValue(self._key("output"), self.output_widget.filePath())
+        self.settings.setValue(self._key("split_ortnamn"), self.split_ortnamn.isChecked())
 
     # -- helpers ---------------------------------------------------------
 
@@ -566,7 +576,36 @@ class StacDock(QDockWidget):
         elif ext in RASTER_EXTENSIONS:
             self._add_raster(path, project, failures)
         elif ext in DIRECT_VECTOR_EXTENSIONS:
-            self._add_vector(collection, path, project, failures, font_missing)
+            self._add_vector_or_split(collection, path, project, failures, font_missing)
+
+    def _add_vector_or_split(
+        self,
+        collection: str,
+        path: str,
+        project: QgsProject,
+        failures: list,
+        font_missing: list,
+        group: QgsLayerTreeGroup | None = None,
+    ) -> None:
+        """Split off per-län files first when the user asked for it and this
+        collection is known to come as a single nationwide file (see
+        core/split.SPLITTABLE) - otherwise just add the file as usual."""
+        field = SPLITTABLE.get(collection)
+        if field and self.split_ortnamn.isChecked():
+            try:
+                sublayers = QgsProviderRegistry.instance().querySublayers(path)
+            except Exception:  # pragma: no cover - defensive, provider quirks vary
+                sublayers = []
+            vector_sublayers = [s for s in sublayers if s.type() == Qgis.LayerType.Vector]
+            if len(vector_sublayers) <= 1:
+                table = vector_sublayers[0].name() if vector_sublayers else collection
+                split_results = split_by_lan(path, table, field, Path(path).parent)
+                if split_results:
+                    for _lan_name, split_path in split_results:
+                        self._add_vector(collection, str(split_path), project, failures, font_missing, group)
+                    return
+                failures.append(f"{Path(path).name}: kunde inte delas upp per län, lägger till odelad")
+        self._add_vector(collection, path, project, failures, font_missing, group)
 
     def _add_zip_contents(
         self, collection: str, zip_path: str, project: QgsProject, failures: list, font_missing: list
@@ -590,7 +629,7 @@ class StacDock(QDockWidget):
             if ext in RASTER_EXTENSIONS:
                 self._add_raster(full_path, project, failures, group)
             elif ext in DIRECT_VECTOR_EXTENSIONS:
-                self._add_vector(collection, full_path, project, failures, font_missing, group)
+                self._add_vector_or_split(collection, full_path, project, failures, font_missing, group)
 
     @staticmethod
     def _add_raster(

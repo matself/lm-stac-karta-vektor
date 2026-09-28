@@ -102,6 +102,90 @@ extern fil - se `DRAW_ORDER["kommun-lan-rike"]` i `core/styles.py` för
 skiktordningen (mindre enheter ovanpå större: kommun, sedan län, sedan
 rike underst).
 
+## Ortnamn - Topo10:s regelbaserade stil, fungerar nu fullt ut
+
+Fråga: "kan ortnamn stilsättas enligt Topo10?" `Topografi10_vektor_thematic.qlr`
+(och den äldre `Topografi10_vektor_260605.qlr`, identiskt innehåll för detta
+lager) har ett lager **"Ortnamn och upplysningstext"**
+(`text_ln12.gpkg|layername=textobjekt`) med en kategoriserad rendering på
+attributet `detaljtyp` (15 kategorier, t.ex. `BEBTX`="Bebyggelsenamn",
+`VATTTX`="Namn på sjö") och regelbaserad etikettsättning per kategori -
+olika färg, kursivering och fetstil per kategori (t.ex. grön kursiv för
+naturreservat, blå kursiv för vattendrag, fet svart för tätortsnamn). Vår
+riktiga `ortnamn`-samling (`ortnamn_se.gpkg|layername=ortnamn`, ~989 000
+objekt) har fältet `detaljtyp` med 13 distinkta värden, varav 11 finns
+direkt bland Topo10:s 15 kategorier (`KULTURTX` och `TRAKTTX` saknas där,
+utan motsvarande regel - de får ingen etikett, vilket är korrekt eftersom
+Topo10:s eget schema inte har dem heller).
+
+**Tre saker hittades, alla lösta:**
+
+1. Symbolerna i Topo10:s lager är avsiktligt osynliga (`color`-alpha = 0,
+   `outline_style="no"`) - punkten är bara en etikettankare, inte tänkt att
+   synas. Förväntat, inget fel.
+2. Etikettreglerna pekar på fältet `"text"` (Topo10:s egen generiska
+   textkolumn i `textobjekt`), inte `"ortnamn"` (vårt fältnamn). Rättades med
+   ett enkelt textbyte i XML:en: `fieldName="text"` → `fieldName="ortnamn"`
+   på alla 17 `<text-style>`-element.
+3. **Den riktiga boven bakom "ingenting renderas":** varje regel har en
+   data-definierad `Size`-egenskap kopplad till fältet `thojd`
+   (textstorleksklass), plus `LabelRotation`→`trikt` och `OffsetQuad`→`tjust`.
+   De fälten finns i Topo10:s egna `textobjekt`-tabell men **inte** i
+   STAC-vektor-produktens öppna `ortnamn`-tabell (som bara har `fid`,
+   `ortnamn`, `kvartsruta`, `nkoordinat`, `ekoordinat`, `lanskod`,
+   `kommunkod`, `detaljtyp`, `sprak`, `lopnummer`, `sockenstadkod`,
+   `sockenstadnamn`). När ett data-definierat uttryck pekar på ett fält som
+   inte finns evalueras det till NULL, och `Size`-transformerns
+   `nullOutput="0"` satte då textstorleken till 0 för *alla* etiketter -
+   PAL (etikettmotorn) placerar aldrig en etikett med storlek 0, så resultatet
+   blev noll placerade etiketter, oavsett om man körde
+   `QgsRuleBasedLabeling` eller `QgsVectorLayerSimpleLabeling` med samma
+   inställningar. Det här såg ut som och misstogs länge för ett motorfel i
+   `QgsRuleBasedLabeling` (se git-historik för den ursprungliga, felaktiga
+   slutsatsen) - det var det inte. Lösning: ta bort de tre
+   data-definierade `Option`-noderna (`Size`, `LabelRotation`, `OffsetQuad`)
+   ur varje regels `dd_properties` innan filen sparas, eftersom de fält de
+   pekar på helt enkelt inte finns i den här produkten.
+
+**Vad det betyder i praktiken:** `thojd`/`trikt`/`tjust` är inte generiska
+QGIS-inställningar - de är per-objekt kartografisk produktionsmetadata
+(textstorleksklass, textriktning, vilken av de nio kvadranterna runt
+ankarpunkten etiketten ska placeras i) som hör till Topo10:s fullständiga
+databas, inte till den öppna STAC-vektor-produkten "**Ortnamn
+Nedladdning, vektor**". Ortnamnsnedladdningen är ett förenklat,
+allmänt namnregister (namn + `detaljtyp` + grundläggande geografi), inte
+samma produktionsdata som ligger bakom en tryckt/renderad Topo10-karta.
+Manérfilen är alltså fullt avsedd för kartografi - bara för en rikare
+datamängd än den som faktiskt publiceras öppet. Det som går att överföra
+till ortnamnsnedladdningen är den del av stilen som bara beror på
+`detaljtyp` (färg, kursivering, fetstil per kategori - det finns i båda),
+inte den del som beror på per-objekt-placeringsdata som ortnamnsnedladdningen
+saknar.
+
+**Hur den slutgiltiga `ortnamn_ortnamn.qml` togs fram** (skiljer sig från
+metoden i avsnittet nedan, eftersom `QgsRuleBasedLabeling`s Python-API visade
+sig vara opålitligt att bygga om för hand - se varning nedan): `renderer-v2`-
+och `labeling`-XML-noderna kopierades **direkt** ur QLR:en via
+`QDomDocument`/`QDomElement` (inte via `QgsRuleBasedLabeling`-objekt i
+Python), fixades enligt punkt 2-3 ovan genom att manipulera DOM-trädet
+(aldrig regex på XML-text - nästlade `<Option>`-element med samma namn gör
+enkel textersättning opålitlig, se nedan), och skrevs ut som en fristående
+`.qml`. Verifierat mot riktig nedladdad `ortnamn_se`-data (Höör/Hörby-området,
+83 placerade etiketter, matchar exakt Lantmäteriets egen visuella stil).
+
+**Varning för framtida stilextraktion:** att bygga om `QgsRuleBasedLabeling`
+regel för regel i Python (t.ex. `QgsRuleBasedLabeling.Rule(settings)` +
+`rootRule.appendChild(rule)`) är känsligt - ett tidigt försök på det sättet
+gav till synes identiska regler (rätt filter, rätt `fieldName`) men renderade
+ändå ingenting, av skäl som aldrig klarlades. Direkt DOM-manipulation av den
+redan fungerande QLR-XML:en (byt attribut, ta bort noder) och sedan
+`layer.importNamedStyle(QDomDocument)` är den tillförlitliga vägen. Undvik
+också `layer.loadNamedStyle(path, ...)` (filsökvägsvarianten) - den kan tyst
+läsa en stil som redan sparats i lagrets egen `layer_styles`-tabell (t.ex. i
+en GeoPackage) i stället för filen man faktiskt pekar på; `core/styles.py`
+läser nu filen själv och importerar via `QDomDocument`/`importNamedStyle()`
+för att undvika det.
+
 ## Hur QML-filerna togs fram
 
 QLR-filen innehåller alla lager i en enda fil (ett `layer-tree-group` plus

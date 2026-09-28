@@ -14,6 +14,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from qgis.core import QgsMapLayer, QgsVectorLayer
+from qgis.PyQt.QtXml import QDomDocument
 
 from ..config import PLUGIN_NAME
 from .fonts import ensure_font, font_referenced_in
@@ -78,7 +79,13 @@ def apply_style(layer: QgsVectorLayer, collection_id: str, table: str) -> tuple[
     if path is None:
         return False, False
     font_missing = font_referenced_in(path) and not ensure_font()
-    _message, ok = layer.loadNamedStyle(str(path), CATEGORIES)
+    # QgsMapLayer.loadNamedStyle(path, ...) can silently resolve to a style already
+    # saved in the layer's own provider (e.g. a GeoPackage's layer_styles table, which
+    # apply_style itself writes to below) instead of reading the QML file - reading the
+    # file ourselves and importing it via QDomDocument avoids that ambiguity.
+    doc = QDomDocument()
+    doc.setContent(path.read_text(encoding="utf-8"), True)
+    ok, _message = layer.importNamedStyle(doc, CATEGORIES)
     if ok:
         # Default style in the GeoPackage's layer_styles table: the file opens
         # styled in any QGIS, also without this plugin.

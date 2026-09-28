@@ -121,11 +121,16 @@ området eller tidsfiltret.
    skikt får en egen enkel stil, eftersom Lantmäteriet inte publicerar
    någon manérfil för den samlingen) läggs till redan stilsatta - se
    [stilfiler.md](stilfiler.md) för detaljer.
-4. Klicka **Hämta valda**. Är den sammanlagda storleken över 2 GB frågar
+4. Om ni hämtar **Ortnamn** (som till skillnad från övriga samlingar levereras
+   som en enda rikstäckande fil, ~989 000 objekt) kan ni kryssa i **Dela upp
+   ortnamn per län (en fil per län)** för att i stället få 21 mindre,
+   mer hanterbara GeoPackage-filer - en per län - som läggs till som
+   separata, stilsatta lager.
+5. Klicka **Hämta valda**. Är den sammanlagda storleken över 2 GB frågar
    pluginet om bekräftelse innan nedladdningen startar.
-5. En förloppsindikator visar aktuell fil och hur mycket som laddats ned.
+6. En förloppsindikator visar aktuell fil och hur mycket som laddats ned.
    Klicka **Avbryt** för att stoppa en pågående nedladdning.
-6. När allt är klart visas ett meddelande med antal nedladdade filer, och
+7. När allt är klart visas ett meddelande med antal nedladdade filer, och
    eventuella lager dyker upp i lagerpanelen om steg 3 var ikryssat.
 
 ## Felsökning

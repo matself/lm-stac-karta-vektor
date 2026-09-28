@@ -183,6 +183,12 @@ Currently covers:
   official Lantmäteriet style
 - `kommun-lan-rike` (all 3 tables: `kommun`, `lan`, `rike`) - self-designed,
   no official style exists
+- `ortnamn` - official Lantmäteriet style, adapted from Topo10's
+  categorized/rule-based labeling by `detaljtyp` (15 categories, e.g. bold
+  black for tätort names, italic green for nature reserves, italic blue for
+  water features) - see [docs/stilfiler.md](docs/stilfiler.md) for how the
+  field-name and data-defined-property mismatches against the STAC-vektor
+  schema were resolved
 
 Other collections fall back to QGIS' default style until a matching QML is
 added - see [docs/stilfiler.md](docs/stilfiler.md) for where the current

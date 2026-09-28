@@ -6,6 +6,43 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Optional per-län split for `ortnamn`: a new "Dela upp ortnamn per län (en
+  fil per län)" checkbox in the Hämta group (off by default). `ortnamn` is
+  the one STAC-vektor collection delivered as a single nationwide file
+  (~989 000 objekt) instead of one file per kommun, which makes it
+  unwieldy to work with as-is. When checked, the downloaded file is written
+  out as 21 separate GeoPackages (one per `lanskod`, e.g.
+  `ortnamn_se_stockholms.gpkg`) via `QgsVectorFileWriter` with a subset
+  string filter, and each is added as its own styled layer instead of the
+  one giant layer. New `core/lan.py` (the 21 län code → name lookup) and
+  `core/split.py` (`SPLITTABLE`, `split_by_lan`).
+- Official Lantmäteriet styling for `ortnamn`, adapted from Topo10's
+  categorized/rule-based labeling by `detaljtyp` (15 categories, e.g. bold
+  black for tätort names, italic green for nature reserves, italic blue for
+  water features). Extracted directly from `Topografi10_vektor_thematic.qlr`'s
+  "Ortnamn och upplysningstext" layer via `QDomDocument`/`QDomElement`
+  manipulation (not by rebuilding `QgsRuleBasedLabeling` objects in Python,
+  which proved unreliable), fixing a field-name mismatch (`text` →
+  `ortnamn`) and removing three data-defined properties (`Size`,
+  `LabelRotation`, `OffsetQuad`) that referenced fields (`thojd`, `trikt`,
+  `tjust`) present in Topo10's internal schema but not in the STAC-vektor
+  open-data `ortnamn` table - those fields evaluating to `NULL` was silently
+  zeroing every label's font size, which had looked like a `QgsRuleBasedLabeling`
+  engine bug. See [docs/stilfiler.md](docs/stilfiler.md).
+
+### Fixed
+
+- `core/styles.apply_style()` used `layer.loadNamedStyle(path, ...)`, whose
+  file-path overload can silently resolve to a style already saved in the
+  layer's own provider (e.g. a GeoPackage's `layer_styles` table, which
+  `apply_style` itself writes to) instead of reading the QML file passed to
+  it - discovered while re-testing the `ortnamn` style against a GeoPackage
+  that still had an earlier style saved. Now reads the file and imports it
+  via `QDomDocument`/`importNamedStyle()` instead, which always reflects the
+  actual file on disk.
+
+### Added
+
 - Self-designed styling for `kommun-lan-rike` (`kommun`, `lan`, `rike`
   polygon tables): magenta outline-only polygons, solid/dashed/dash-dot
   line pattern per level, `lan`/`kommun` labelled by name. No official
