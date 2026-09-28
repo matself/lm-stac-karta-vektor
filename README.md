@@ -201,21 +201,40 @@ is currently disabled in the interface, see above):
 
 ## Install
 
-1. Link or copy the `lm_stac_karta_vektor/` folder into your QGIS profile's
-   plugin directory, e.g. on Windows:
+Not yet on the official plugins.qgis.org repository. Two options meanwhile:
 
-   ```powershell
-   Copy-Item -Recurse `
-     "C:\GITHUB\lm-stac-karta-vektor\lm_stac_karta_vektor" `
-     "$env:APPDATA\QGIS\QGIS3\profiles\default\python\plugins\lm_stac_karta_vektor"
-   ```
+- **Custom plugin source**: *Plugins → Manage and Install Plugins →
+  Settings → Add...*, URL
+  `https://raw.githubusercontent.com/matself/lm-stac-karta-vektor/master/plugins.xml`
+  (check "Show also experimental plugins"). Search for "Geodata Downloader
+  (Lantmäteriet) - STAC-vektor" and install; future releases then show up
+  as regular updates.
+- **Install from ZIP**: download the zip from
+  [Releases](https://github.com/matself/lm-stac-karta-vektor/releases) and
+  use *Install from ZIP*.
 
-2. Start QGIS, open **Plugins -> Manage and Install Plugins -> Installed**
-   and enable "Geodata Downloader (Lantmäteriet) - STAC-vektor". The panel
-   opens from the Web menu or the toolbar.
+For development, link or copy the `lm_stac_karta_vektor/` folder into your
+QGIS profile's plugin directory instead, e.g. on Windows:
+
+```powershell
+Copy-Item -Recurse `
+  "C:\GITHUB\lm-stac-karta-vektor\lm_stac_karta_vektor" `
+  "$env:APPDATA\QGIS\QGIS3\profiles\default\python\plugins\lm_stac_karta_vektor"
+```
 
 Requires QGIS 3.44 or later (the OAuth2 Client Credentials flow in
 `QgsBlockingNetworkRequest`/`QgsFileDownloader`).
+
+## New release
+
+1. Bump `version` in `lm_stac_karta_vektor/metadata.txt`, update
+   `changelog=` there and in `CHANGELOG.md`, and commit.
+2. `python build.py` - builds `dist/lm_stac_karta_vektor.<version>.zip`
+   and updates `plugins.xml`.
+3. Commit `plugins.xml`, push and create the release:
+   ```
+   gh release create v<version> dist/lm_stac_karta_vektor.<version>.zip --title "v<version>"
+   ```
 
 ## Getting started
 

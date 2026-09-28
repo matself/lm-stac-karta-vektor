@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugins>
+  <pyqgis_plugin name="Geodata Downloader (Lantmäteriet) - STAC-vektor" version="0.1.0" plugin_id="lm_stac_karta_vektor">
+    <description>Search and download open vector data from Lantmäteriet's STAC-vektor service.</description>
+    <about>Search and download open vector data directly from Lantmäteriet's (the Swedish
+mapping, cadastral and land registration authority) STAC-vektor service: Byggnader
+(buildings), Marktäcke (land cover), Fastighetsindelning (cadastral boundaries),
+Belägenhetsadresser (addresses), Ortnamn (place names) and Kommun/lan/rike
+(municipality/county/country). Independent plugin, not developed by Lantmäteriet.
+Sibling plugin to Geodata Downloader (Lantmäteriet), which covers orthophoto and
+elevation data. Search works with any valid key; download requires a system
+account that has ordered the right product on Geotorget. Login goes through
+QGIS' own Authentication Manager (OAuth2 client credentials) - the plugin does
+not store any credentials itself. Covers Sweden only. The user interface is in
+Swedish; see the README for an English explanation of every dialog and message.
+STAC-karta (raster maps) is not offered: its only open collection is not tiled
+by area and Lantmäteriet's own product page for it points to a plain FTP mirror
+instead of API access, see the README for details. Downloaded layers are styled
+with Lantmäteriet's own official QGIS symbology where available (currently
+Fastighetsindelning and Marktäcke); a bundled font (LMTopografisymboler,
+downloaded from Lantmäteriet's own product documentation) is registered for
+the QGIS session only, never installed system-wide, see the README for
+details and license note.</about>
+    <version>0.1.0</version>
+    <qgis_minimum_version>3.44</qgis_minimum_version>
+    <qgis_maximum_version>4.99</qgis_maximum_version>
+    <homepage>https://github.com/matself/lm-stac-karta-vektor</homepage>
+    <file_name>lm_stac_karta_vektor.0.1.0.zip</file_name>
+    <icon>https://raw.githubusercontent.com/matself/lm-stac-karta-vektor/master/lm_stac_karta_vektor/icon.svg</icon>
+    <author_name>Mats Elfström</author_name>
+    <download_url>https://github.com/matself/lm-stac-karta-vektor/releases/download/v0.1.0/lm_stac_karta_vektor.0.1.0.zip</download_url>
+    <uploaded_by>Mats Elfström</uploaded_by>
+    <experimental>True</experimental>
+    <deprecated>False</deprecated>
+    <tracker>https://github.com/matself/lm-stac-karta-vektor/issues</tracker>
+    <repository>https://github.com/matself/lm-stac-karta-vektor</repository>
+    <tags>lantmateriet,stac,geodata,vector,download,sweden,geotorget,open data</tags>
+  </pyqgis_plugin>
+</plugins>

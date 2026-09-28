@@ -6,6 +6,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- `build.py` and `plugins.xml`: builds `dist/lm_stac_karta_vektor.<version>.zip`
+  (via `git archive`, so only committed files) and a self-hosted plugin
+  repository, matching the sibling plugins' release process. See "New
+  release" in the README.
 - Downloaded layers are grouped in the layer tree (one group per download,
   e.g. `marktacke_kn1270`) and ordered within the group to match
   Lantmäteriet's own cartographic draw order from the QLR - points on top,
