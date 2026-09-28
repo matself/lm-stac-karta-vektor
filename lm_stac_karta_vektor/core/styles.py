@@ -29,6 +29,38 @@ def find_style(collection_id: str, table: str) -> Path | None:
     return path if path.exists() else None
 
 
+# Layer stacking order within a collection, top of the QGIS layer tree first
+# (drawn last, i.e. on top of everything below it). Taken directly from the
+# layer-tree-group order in Lantmäteriet's own QLR files, which they
+# document as "en föreslagen ritordning av skikten" (a suggested draw order
+# for the layers) - see docs/stilfiler.md for exactly how this was read out
+# of each QLR.
+DRAW_ORDER: dict[str, list[str]] = {
+    "fastighetsindelning": [
+        "granspunkt",
+        "registerenhetsomradespunkt",
+        "registerenhetsomradeslinje",
+        "registerenhetsomradesgrans",
+        "traktyta",
+        "registerenhetsomradesyta",
+    ],
+    "marktacke": ["markkantlinje", "sankmark", "mark"],
+}
+
+
+def sort_by_draw_order(collection_id: str, tables: list[str]) -> list[str]:
+    """Tables in the order they should appear in the QGIS layer tree (top
+    first), per DRAW_ORDER. Tables with no known order (e.g. a non-spatial
+    table, or a collection without an extracted style) keep their original
+    relative order and are appended after the known ones."""
+    order = DRAW_ORDER.get(collection_id)
+    if not order:
+        return tables
+    known = [t for t in order if t in tables]
+    unknown = [t for t in tables if t not in order]
+    return known + unknown
+
+
 def apply_style(layer: QgsVectorLayer, collection_id: str, table: str) -> tuple[bool, bool]:
     """Apply the collection table's style if there is one, and store it as
     default in the GeoPackage.

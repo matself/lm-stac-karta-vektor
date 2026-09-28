@@ -155,6 +155,14 @@ and labeling are applied, not fields/forms, and the style is also saved
 into the GeoPackage's own `layer_styles` table so the file stays styled
 even opened without this plugin later.
 
+Each download also gets its own group in the layer tree (e.g.
+`marktacke_kn1270`), with its layers ordered inside that group to match
+Lantmäteriet's own cartographic draw order from the QLR - points on top,
+then lines, then polygon fills at the bottom (`core/styles.DRAW_ORDER`).
+Lantmäteriet documents this order explicitly ("en föreslagen ritordning av
+skikten"); previously all layers landed flat and unordered at the project
+root.
+
 Currently covers:
 
 - `fastighetsindelning` (all 6 geometry tables: `granspunkt`,

@@ -6,6 +6,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Downloaded layers are grouped in the layer tree (one group per download,
+  e.g. `marktacke_kn1270`) and ordered within the group to match
+  Lantmäteriet's own cartographic draw order from the QLR - points on top,
+  then lines, then polygon fills at the bottom (`core/styles.DRAW_ORDER`,
+  `sort_by_draw_order`). Previously all layers landed flat and unordered at
+  the project root.
 - Official Lantmäteriet styling for `marktacke` (all 3 tables: `mark`,
   `markkantlinje`, `sankmark`), extracted from `Marktäcke_vektor_250203.qlr`
   and verified against a real downloaded `marktacke` GeoPackage. See
@@ -33,6 +39,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- `PLUGIN_NAME` (used for the dock title, message-bar prefix, menu entry,
+  toolbar tooltip and task-manager entries) was the English display name
+  used for the plugins.qgis.org metadata `name=` field, making every
+  message-bar popup read as a mix of English and Swedish (e.g. "Geodata
+  Downloader (Lantmäteriet) - STAC-vektor : Välj minst en samling."). The
+  two are unrelated by rule - metadata's `name=` stays English for the
+  store listing, but the runtime UI must stay Swedish. `PLUGIN_NAME` is now
+  a separate, fully Swedish string ("Geodatahämtning (Lantmäteriet) –
+  STAC-vektor").
 - The `LMTopografisymboler` font-missing warning fired on every download
   regardless of whether any layer's actually-applied style referenced the
   font (e.g. it fired for plain `markkantlinje`/`sankmark` styles that don't

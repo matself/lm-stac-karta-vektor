@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-PLUGIN_NAME = "Geodata Downloader (Lantmäteriet) - STAC-vektor"
+# Used everywhere in the runtime UI (dock title, message bar, menu entry,
+# toolbar tooltip, task manager entries) - kept fully Swedish like the rest
+# of the interface. metadata.txt's own `name=` field is the English display
+# name plugins.qgis.org requires for the store listing; the two are
+# deliberately different strings for different audiences.
+PLUGIN_NAME = "Geodatahämtning (Lantmäteriet) – STAC-vektor"
 SETTINGS_PREFIX = "lm_stac_karta_vektor"
 
 API_URL = "https://api.lantmateriet.se"

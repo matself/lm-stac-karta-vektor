@@ -19,6 +19,7 @@ from qgis.core import (
     Qgis,
     QgsApplication,
     QgsCoordinateReferenceSystem,
+    QgsLayerTreeGroup,
     QgsProject,
     QgsProviderRegistry,
     QgsRasterLayer,
@@ -68,7 +69,7 @@ from ..core.items import (
     RASTER_EXTENSIONS,
     StacItem,
 )
-from ..core.styles import apply_style
+from ..core.styles import apply_style, sort_by_draw_order
 from ..core.task import CollectionsTask, SearchTask
 from .auth_dialog import CreateAuthDialog
 
@@ -579,25 +580,38 @@ class StacDock(QDockWidget):
             failures.append(f"{Path(zip_path).name}: kunde inte packas upp ({exc})")
             return
 
+        # One group per download, at the top of the TOC, so a kommun's layers
+        # stay together and can be told apart from the next one downloaded.
+        group = project.layerTreeRoot().insertGroup(0, Path(zip_path).stem)
+
         for name in names:
             ext = os.path.splitext(name)[1].lower()
             full_path = os.path.join(extract_dir, name)
             if ext in RASTER_EXTENSIONS:
-                self._add_raster(full_path, project, failures)
+                self._add_raster(full_path, project, failures, group)
             elif ext in DIRECT_VECTOR_EXTENSIONS:
-                self._add_vector(collection, full_path, project, failures, font_missing)
+                self._add_vector(collection, full_path, project, failures, font_missing, group)
 
     @staticmethod
-    def _add_raster(path: str, project: QgsProject, failures: list) -> None:
+    def _add_raster(
+        path: str, project: QgsProject, failures: list, group: QgsLayerTreeGroup | None = None
+    ) -> None:
         layer = QgsRasterLayer(path, Path(path).stem)
         if layer.isValid():
-            project.addMapLayer(layer)
+            project.addMapLayer(layer, group is None)
+            if group is not None:
+                group.insertLayer(len(group.children()), layer)
         else:
             failures.append(f"{Path(path).name}: kunde inte öppnas som raster")
 
     @staticmethod
     def _add_vector(
-        collection: str, path: str, project: QgsProject, failures: list, font_missing: list
+        collection: str,
+        path: str,
+        project: QgsProject,
+        failures: list,
+        font_missing: list,
+        group: QgsLayerTreeGroup | None = None,
     ) -> None:
         # A vector container such as GeoPackage can hold several layers (e.g.
         # separate point/line/polygon tables in fastighetsindelning) - add
@@ -614,22 +628,29 @@ class StacDock(QDockWidget):
                 _applied, missing = apply_style(layer, collection, Path(path).stem)
                 if missing:
                     font_missing.append(True)
-                project.addMapLayer(layer)
+                project.addMapLayer(layer, group is None)
+                if group is not None:
+                    group.insertLayer(len(group.children()), layer)
             else:
                 failures.append(f"{Path(path).name}: kunde inte öppnas som vektorlager")
             return
 
         stem = Path(path).stem
         multiple = len(vector_sublayers) > 1
-        for sublayer in vector_sublayers:
-            name = f"{stem} - {sublayer.name()}" if multiple else stem
+        by_table = {s.name(): s for s in vector_sublayers}
+        # Cartographic order (points on top, then lines, then polygon fills
+        # at the bottom) per Lantmäteriet's own QLR - see core/styles.DRAW_ORDER.
+        ordered_tables = sort_by_draw_order(collection, list(by_table.keys()))
+        for index, table in enumerate(ordered_tables):
+            sublayer = by_table[table]
+            name = f"{stem} - {table}" if multiple else stem
             layer = QgsVectorLayer(sublayer.uri(), name, sublayer.providerKey())
             if layer.isValid():
-                _applied, missing = apply_style(layer, collection, sublayer.name())
+                _applied, missing = apply_style(layer, collection, table)
                 if missing:
                     font_missing.append(True)
-                project.addMapLayer(layer)
+                project.addMapLayer(layer, group is None)
+                if group is not None:
+                    group.insertLayer(index, layer)
             else:
-                failures.append(
-                    f"{Path(path).name} ({sublayer.name()}): kunde inte öppnas som vektorlager"
-                )
+                failures.append(f"{Path(path).name} ({table}): kunde inte öppnas som vektorlager")
