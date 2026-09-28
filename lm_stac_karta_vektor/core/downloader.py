@@ -26,7 +26,7 @@ def target_path(output_dir: Path, item: StacItem) -> Path:
 class DownloadQueue(QObject):
     # file index (1-based), file count, current file name, bytes received, bytes total
     progress = pyqtSignal(int, int, str, "qlonglong", "qlonglong")
-    # downloaded (or already present) paths, failure messages, cancelled
+    # downloaded (or already present) (collection, path) pairs, failure messages, cancelled
     finished = pyqtSignal(list, list, bool)
 
     def __init__(self, items: list[StacItem], authcfg: str, output_dir: Path, parent=None):
@@ -34,7 +34,7 @@ class DownloadQueue(QObject):
         self.items = items
         self.authcfg = authcfg
         self.output_dir = output_dir
-        self.paths: list[str] = []
+        self.paths: list[tuple[str, str]] = []
         self.failures: list[str] = []
         self._index = -1
         self._downloader: QgsFileDownloader | None = None
@@ -60,7 +60,7 @@ class DownloadQueue(QObject):
         item = self.items[self._index]
         final = target_path(self.output_dir, item)
         if final.exists() and (item.size is None or final.stat().st_size == item.size):
-            self.paths.append(str(final))
+            self.paths.append((item.collection, str(final)))
             self.progress.emit(self._index + 1, len(self.items), item.filename, 1, 1)
             self._next()
             return
@@ -75,16 +75,16 @@ class DownloadQueue(QObject):
             )
         )
         downloader.downloadCompleted.connect(
-            lambda _url, part=part, final=final: self._completed(part, final)
+            lambda _url, part=part, final=final, item=item: self._completed(item.collection, part, final)
         )
         downloader.downloadError.connect(lambda errors, item=item: self._error(item, errors))
         downloader.downloadCanceled.connect(lambda part=part: self._discard(part))
         downloader.downloadExited.connect(self._exited)
         downloader.startDownload()
 
-    def _completed(self, part: Path, final: Path) -> None:
+    def _completed(self, collection: str, part: Path, final: Path) -> None:
         os.replace(part, final)
-        self.paths.append(str(final))
+        self.paths.append((collection, str(final)))
 
     def _error(self, item: StacItem, errors: list) -> None:
         message = "; ".join(str(e) for e in errors)

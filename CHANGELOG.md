@@ -4,6 +4,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Official Lantmäteriet styling for downloaded layers: `core/styles.py`
+  applies a bundled `.qml` (symbology + labeling) per collection/table when
+  one exists, and saves it into the GeoPackage's `layer_styles` table so it
+  stays styled outside the plugin too. Covers all 6 `fastighetsindelning`
+  geometry tables so far, extracted from Lantmäteriet's own
+  `Fastighetsindelning_vektor_251127.qlr` (the *current*, "Gällande" 2025.02
+  product documentation - not the outgoing 2021.10 GEODOK/28 page, which
+  has an entirely different, non-matching table schema). See
+  [docs/stilfiler.md](docs/stilfiler.md) for exactly where it came from and
+  how to add styles for more collections.
+- Bundled `LMTopografisymboler` font (`fonts/lmtopografisymboler.ttf`,
+  downloaded from the same Geotorget documentation page), registered for
+  the running QGIS session only via `QFontDatabase.addApplicationFont`
+  (`core/fonts.py`) - some of Lantmäteriet's point symbols (e.g.
+  fastighetsgränspunkter) use it. Falls back to a warning message if
+  registration fails instead of silently rendering the wrong symbols.
+
 ### Fixed
 
 - `fastighetsindelning` (and any other multi-layer GeoPackage, e.g. separate

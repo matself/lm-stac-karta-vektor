@@ -20,7 +20,11 @@ about=Search and download open vector data directly from Lantmäteriet's (the Sw
     Swedish; see the README for an English explanation of every dialog and message.
     STAC-karta (raster maps) is not offered: its only open collection is not tiled
     by area and Lantmäteriet's own product page for it points to a plain FTP mirror
-    instead of API access, see the README for details.
+    instead of API access, see the README for details. Downloaded layers are styled
+    with Lantmäteriet's own official QGIS symbology where available (currently
+    Fastighetsindelning); a bundled font (LMTopografisymboler, downloaded from
+    Lantmäteriet's own product documentation) is registered for the QGIS session
+    only, never installed system-wide, see the README for details and license note.
 
 tracker=https://github.com/matself/lm-stac-karta-vektor/issues
 repository=https://github.com/matself/lm-stac-karta-vektor

@@ -10,6 +10,11 @@ Kommun/lan/rike (municipality/county/country). Covers Sweden only.
 STAC-karta (raster maps) is not offered - see
 [STAC-karta is disabled](#stac-karta-is-disabled) below.
 
+Downloaded layers are automatically styled with Lantmäteriet's own official
+QGIS symbology where a style has been extracted for that collection's
+tables (currently `fastighetsindelning`) - see
+[Official styling](#official-styling) below.
+
 Sibling plugin to [`matself/LM-STAC-Downloader`](https://github.com/matself/LM-STAC-Downloader)
 ("Geodata Downloader (Lantmäteriet)"), which covers orthophoto and elevation
 data (STAC-bild/STAC-hojd). The architecture and interface intentionally
@@ -139,6 +144,33 @@ Turn it back on by removing the filter in `config.py`
 if Lantmäteriet starts tiling `topowebb` or otherwise makes STAC-karta
 suitable for a search-and-download interface.
 
+## Official styling
+
+When "Lägg till i projektet när klart" is checked, downloaded layers are
+styled with Lantmäteriet's own official QGIS symbology, extracted from the
+`.qlr` manér file published on the product's Geotorget documentation page
+(`lm_stac_karta_vektor/styles/{collection}_{table}.qml`, applied via
+`core/styles.py`, matching the sibling plugin's approach). Only symbology
+and labeling are applied, not fields/forms, and the style is also saved
+into the GeoPackage's own `layer_styles` table so the file stays styled
+even opened without this plugin later.
+
+Currently covers `fastighetsindelning` (all 6 geometry tables: `granspunkt`,
+`registerenhetsomradespunkt`, `registerenhetsomradeslinje`,
+`registerenhetsomradesgrans`, `traktyta`, `registerenhetsomradesyta`).
+Other collections fall back to QGIS' default style until a matching QML is
+added - see [docs/stilfiler.md](docs/stilfiler.md) for where the current
+files came from, how they were produced, and how to add more.
+
+Some of Lantmäteriet's point symbols (e.g. fastighetsgränspunkter in
+`granspunkt`) use a custom font, **LMTopografisymboler**, bundled at
+`lm_stac_karta_vektor/fonts/lmtopografisymboler.ttf` (downloaded from the
+same Geotorget documentation page as the style file) and registered for
+the running QGIS session only via `QFontDatabase.addApplicationFont`
+(`core/fonts.py`) - never installed into the OS font directory. If
+registration fails for any reason, a warning is shown instead of silently
+rendering the wrong symbols.
+
 ## Catalog structure (STAC)
 
 Both services follow STAC/OGC API - Features (including STAC-karta, which
@@ -195,4 +227,11 @@ linking or copying the folder into the profile's `python/plugins`.
 
 ## License
 
-GPL-3.0-or-later, see [LICENSE](LICENSE).
+GPL-3.0-or-later, see [LICENSE](LICENSE), for the plugin's own code.
+
+`lm_stac_karta_vektor/fonts/lmtopografisymboler.ttf` is not covered by that
+license: it's Lantmäteriet's own symbol font, downloaded from their
+Geotorget product documentation page and bundled here so the official
+styling in [Official styling](#official-styling) renders correctly without
+a separate manual install step. See
+[docs/stilfiler.md](docs/stilfiler.md) for its exact source.

@@ -61,12 +61,14 @@ from ..config import (
 )
 from ..core.auth import authcfg_exists
 from ..core.downloader import DownloadQueue
+from ..core.fonts import FONT_FAMILY, ensure_font
 from ..core.items import (
     ARCHIVE_EXTENSIONS,
     DIRECT_VECTOR_EXTENSIONS,
     RASTER_EXTENSIONS,
     StacItem,
 )
+from ..core.styles import apply_style
 from ..core.task import CollectionsTask, SearchTask
 from .auth_dialog import CreateAuthDialog
 
@@ -533,8 +535,14 @@ class StacDock(QDockWidget):
 
         if self.add_to_project.isChecked():
             failures = list(failures)
-            for path in paths:
-                self._add_to_project(path, failures)
+            if paths and not ensure_font():
+                self._message(
+                    f"Fonten {FONT_FAMILY} kunde inte registreras - punktsymboler i "
+                    "stilsatta lager kan se fel ut.",
+                    Qgis.MessageLevel.Warning,
+                )
+            for collection, path in paths:
+                self._add_to_project(collection, path, failures)
 
         if failures:
             self._message(
@@ -546,17 +554,17 @@ class StacDock(QDockWidget):
         else:
             self._message(f"{len(paths)} filer hämtade.", Qgis.MessageLevel.Success)
 
-    def _add_to_project(self, path: str, failures: list) -> None:
+    def _add_to_project(self, collection: str, path: str, failures: list) -> None:
         project = QgsProject.instance()
         ext = Path(path).suffix.lower()
         if ext in ARCHIVE_EXTENSIONS:
-            self._add_zip_contents(path, project, failures)
+            self._add_zip_contents(collection, path, project, failures)
         elif ext in RASTER_EXTENSIONS:
             self._add_raster(path, project, failures)
         elif ext in DIRECT_VECTOR_EXTENSIONS:
-            self._add_vector(path, project, failures)
+            self._add_vector(collection, path, project, failures)
 
-    def _add_zip_contents(self, zip_path: str, project: QgsProject, failures: list) -> None:
+    def _add_zip_contents(self, collection: str, zip_path: str, project: QgsProject, failures: list) -> None:
         extract_dir = os.path.splitext(zip_path)[0]
         try:
             with zipfile.ZipFile(zip_path) as archive:
@@ -572,7 +580,7 @@ class StacDock(QDockWidget):
             if ext in RASTER_EXTENSIONS:
                 self._add_raster(full_path, project, failures)
             elif ext in DIRECT_VECTOR_EXTENSIONS:
-                self._add_vector(full_path, project, failures)
+                self._add_vector(collection, full_path, project, failures)
 
     @staticmethod
     def _add_raster(path: str, project: QgsProject, failures: list) -> None:
@@ -583,7 +591,7 @@ class StacDock(QDockWidget):
             failures.append(f"{Path(path).name}: kunde inte öppnas som raster")
 
     @staticmethod
-    def _add_vector(path: str, project: QgsProject, failures: list) -> None:
+    def _add_vector(collection: str, path: str, project: QgsProject, failures: list) -> None:
         # A vector container such as GeoPackage can hold several layers (e.g.
         # separate point/line/polygon tables in fastighetsindelning) - add
         # every one instead of just whichever QgsVectorLayer would default to.
@@ -596,6 +604,7 @@ class StacDock(QDockWidget):
         if not vector_sublayers:
             layer = QgsVectorLayer(path, Path(path).stem, "ogr")
             if layer.isValid():
+                apply_style(layer, collection, Path(path).stem)
                 project.addMapLayer(layer)
             else:
                 failures.append(f"{Path(path).name}: kunde inte öppnas som vektorlager")
@@ -607,6 +616,7 @@ class StacDock(QDockWidget):
             name = f"{stem} - {sublayer.name()}" if multiple else stem
             layer = QgsVectorLayer(sublayer.uri(), name, sublayer.providerKey())
             if layer.isValid():
+                apply_style(layer, collection, sublayer.name())
                 project.addMapLayer(layer)
             else:
                 failures.append(
