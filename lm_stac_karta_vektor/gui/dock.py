@@ -299,12 +299,15 @@ class StacDock(QDockWidget):
     # -- collections ---------------------------------------------------
 
     def _reload_collections(self, *_args) -> None:
-        if self._collections_task is not None:
-            return
         service_key = self.service_combo.currentData()
         if not service_key:
             return
+        if self._collections_task is not None:
+            self._collections_task.cancel()
+        if self._search_task is not None:
+            self._search_task.cancel()
         self.collections_list.clear()
+        self._clear_results()
         task = CollectionsTask(search_base_url(service_key), self._authcfg())
         task.completed.connect(self._on_collections_completed)
         task.failed.connect(self._on_collections_failed)
@@ -400,6 +403,16 @@ class StacDock(QDockWidget):
         self._fill_results()
 
     # -- results ---------------------------------------------------------
+
+    def _clear_results(self) -> None:
+        """Drop stale hits, e.g. when the service or its collections change
+        under the results (a hit's `collection` id is only meaningful for
+        the service it was searched from)."""
+        self.items = []
+        self._rows = {}
+        self.tree.clear()
+        self.search_status.setText("")
+        self._update_summary()
 
     def _fill_results(self) -> None:
         self.tree.blockSignals(True)
