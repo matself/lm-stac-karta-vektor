@@ -10,10 +10,13 @@ RASTER_EXTENSIONS = {".tif", ".tiff", ".jp2"}
 ARCHIVE_EXTENSIONS = {".zip"}
 DIRECT_VECTOR_EXTENSIONS = {".gpkg", ".shp", ".gml", ".geojson", ".json"}
 
-# Lantmäteriet titles these consistently as e.g. "Byggnader för Skellefteå
-# kommun" - the item id is the kommunkod itself (e.g. "2482"), so this is
-# the only place the human-readable name shows up.
-_KOMMUN_RE = re.compile(r"för\s+(.+?)\s+kommun\b", re.IGNORECASE)
+# Lantmäteriet's titles for per-kommun collections all end "<preposition>
+# <Kommun> kommun", but the preposition isn't consistent across collections:
+# "Byggnader för Skellefteå kommun" / "Belägenhetsadresser för Sjöbo kommun"
+# / "Marktäcke för Sjöbo kommun", but "Fastighetsindelning i Sjöbo kommun".
+# The item id is the kommunkod itself (e.g. "2482"), so the title is the
+# only place the human-readable name shows up.
+_KOMMUN_RE = re.compile(r"\b(?:för|i)\s+(.+?)\s+kommun\b", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
