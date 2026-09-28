@@ -1,0 +1,32 @@
+[general]
+name=Geodata Downloader – Karta/Vektor (Lantmäteriet)
+qgisMinimumVersion=3.44
+description=Sök och ladda ned öppna geodata från Lantmäteriets STAC-karta och STAC-vektor.
+version=0.1.0
+author=Mats Elfström
+email=mats.elfstrom@gmail.com
+
+about=Sök och ladda ned data direkt från Lantmäteriets STAC-tjänster: STAC-karta
+    (rasterkartor, t.ex. Topografisk webbkarta) och STAC-vektor (vektordata:
+    Byggnader, Marktäcke, Fastighetsindelning, Belägenhetsadresser, Ortnamn samt
+    Kommun/län/rike). Fristående plugin, inte utvecklat av Lantmäteriet. Systerplugin
+    till Geodata Downloader (Lantmäteriet), som täcker ortofoto och höjddata.
+    Nationell militär karta (nmk50/nmk250) är behörighetsskyddad och visas inte.
+    Sökning fungerar med valfri giltig nyckel; nedladdning kräver ett systemkonto
+    som beställt rätt produkt på Geotorget. Inloggning sker via QGIS egen
+    autentiseringshanterare (OAuth2 client credentials) - pluginet lagrar inga
+    uppgifter själv.
+
+tracker=https://github.com/matself/lm-stac-karta-vektor/issues
+repository=https://github.com/matself/lm-stac-karta-vektor
+homepage=https://github.com/matself/lm-stac-karta-vektor
+
+category=Web
+icon=icon.svg
+tags=lantmateriet,stac,geodata,download,nedladdning,karta,vektor,öppna data,geotorget
+
+experimental=True
+deprecated=False
+server=False
+
+hasProcessingProvider=no
