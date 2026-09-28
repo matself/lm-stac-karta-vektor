@@ -48,6 +48,18 @@ Verifierat: `layername`-värdena i QLR:en (`granspunkt`,
 matchar exakt de tabeller STAC-vektor faktiskt levererar för
 `fastighetsindelning`.
 
+## Marktäcke
+
+`Marktäcke_vektor_250203.qlr` (2025-02-03) hämtades av användaren direkt
+från Geotorget-dokumentationen för STAC-vektor-produkten "Marktäcke
+Nedladdning, vektor" (samma sorts produktkort som ovan, inte den äldre
+GEODOK-varianten). Den har bara tre lager: `Markkantlinje`
+(`markkantlinje`), `Sankmark` (`sankmark`) och `Mark` (`mark`). Verifierat
+mot en riktig nedladdning (redan öppen i användarens QGIS-projekt,
+`marktacke_kn1265.gpkg`) - alla tre tabellnamn matchar exakt.
+`marktacke_mark.qml` refererar `LMTopografisymboler` (samma font som
+fastighetsindelning), de andra två gör det inte.
+
 ## Hur QML-filerna togs fram
 
 QLR-filen innehåller alla lager i en enda fil (ett `layer-tree-group` plus

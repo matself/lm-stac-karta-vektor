@@ -6,6 +6,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Official Lantmäteriet styling for `marktacke` (all 3 tables: `mark`,
+  `markkantlinje`, `sankmark`), extracted from `Marktäcke_vektor_250203.qlr`
+  and verified against a real downloaded `marktacke` GeoPackage. See
+  [docs/stilfiler.md](docs/stilfiler.md).
+- Results table shows the kommun name alongside its code (e.g. "Skellefteå
+  (2482)") when the STAC item's title follows Lantmäteriet's "... för
+  `<kommun>` kommun" phrasing (`StacItem.kommun`/`.label` in `core/items.py`),
+  falling back to the plain id otherwise.
 - Official Lantmäteriet styling for downloaded layers: `core/styles.py`
   applies a bundled `.qml` (symbology + labeling) per collection/table when
   one exists, and saves it into the GeoPackage's `layer_styles` table so it
@@ -25,6 +33,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The `LMTopografisymboler` font-missing warning fired on every download
+  regardless of whether any layer's actually-applied style referenced the
+  font (e.g. it fired for plain `markkantlinje`/`sankmark` styles that don't
+  use it). `apply_style` now reports per-style whether the font was needed
+  and missing (`core/fonts.font_referenced_in`), and the dock warns once
+  only when that was actually the case.
 - `fastighetsindelning` (and any other multi-layer GeoPackage, e.g. separate
   point/line/polygon tables) only had its first layer added to the project;
   `_add_vector` now enumerates every vector sublayer via

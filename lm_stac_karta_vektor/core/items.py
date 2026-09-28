@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Any
 
 RASTER_EXTENSIONS = {".tif", ".tiff", ".jp2"}
 ARCHIVE_EXTENSIONS = {".zip"}
 DIRECT_VECTOR_EXTENSIONS = {".gpkg", ".shp", ".gml", ".geojson", ".json"}
+
+# Lantmäteriet titles these consistently as e.g. "Byggnader för Skellefteå
+# kommun" - the item id is the kommunkod itself (e.g. "2482"), so this is
+# the only place the human-readable name shows up.
+_KOMMUN_RE = re.compile(r"för\s+(.+?)\s+kommun\b", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -29,6 +35,20 @@ class StacItem:
     def extension(self) -> str:
         name = self.filename.lower()
         return name[name.rfind("."):] if "." in name else ""
+
+    @property
+    def kommun(self) -> str | None:
+        """The kommun name extracted from the STAC title, if the title
+        follows Lantmäteriet's "<Tema> för <Kommun> kommun" phrasing."""
+        match = _KOMMUN_RE.search(self.title)
+        return match.group(1) if match else None
+
+    @property
+    def label(self) -> str:
+        """What to show for this item in a results list: the kommun name
+        with its code if we could tell them apart, otherwise just the id."""
+        kommun = self.kommun
+        return f"{kommun} ({self.id})" if kommun else self.id
 
     @property
     def kind(self) -> str:

@@ -48,7 +48,7 @@ Opened from the Web menu or the web toolbar (button "Geodata Downloader
 | Tidsfilter | Time filter | Optional checkable date-from/date-to range |
 | Från / Till | From / To | The two date fields in the time filter |
 | Sök | Search | Runs the STAC search for the selected collections and area |
-| Träffar | Hits | Group listing the search results as a table (name, collection, type, date, size) |
+| Träffar | Hits | Group listing the search results as a table (name, collection, type, date, size). The "name" column shows the kommun name and code (e.g. "Skellefteå (2482)") when the item's STAC title follows Lantmäteriet's "... för `<kommun>` kommun" phrasing, otherwise just the item id |
 | Markera alla | Select all | Checks every hit |
 | Avmarkera alla | Deselect all | Unchecks every hit |
 | Hämta | Download | Group with the download controls |
@@ -155,21 +155,28 @@ and labeling are applied, not fields/forms, and the style is also saved
 into the GeoPackage's own `layer_styles` table so the file stays styled
 even opened without this plugin later.
 
-Currently covers `fastighetsindelning` (all 6 geometry tables: `granspunkt`,
-`registerenhetsomradespunkt`, `registerenhetsomradeslinje`,
-`registerenhetsomradesgrans`, `traktyta`, `registerenhetsomradesyta`).
+Currently covers:
+
+- `fastighetsindelning` (all 6 geometry tables: `granspunkt`,
+  `registerenhetsomradespunkt`, `registerenhetsomradeslinje`,
+  `registerenhetsomradesgrans`, `traktyta`, `registerenhetsomradesyta`)
+- `marktacke` (all 3 tables: `mark`, `markkantlinje`, `sankmark`)
+
 Other collections fall back to QGIS' default style until a matching QML is
 added - see [docs/stilfiler.md](docs/stilfiler.md) for where the current
 files came from, how they were produced, and how to add more.
 
-Some of Lantmäteriet's point symbols (e.g. fastighetsgränspunkter in
-`granspunkt`) use a custom font, **LMTopografisymboler**, bundled at
+Some of Lantmäteriet's symbols (e.g. fastighetsgränspunkter in
+`granspunkt`, and some `mark` categories) use a custom font,
+**LMTopografisymboler**, bundled at
 `lm_stac_karta_vektor/fonts/lmtopografisymboler.ttf` (downloaded from the
-same Geotorget documentation page as the style file) and registered for
+same Geotorget documentation page as the style files) and registered for
 the running QGIS session only via `QFontDatabase.addApplicationFont`
-(`core/fonts.py`) - never installed into the OS font directory. If
-registration fails for any reason, a warning is shown instead of silently
-rendering the wrong symbols.
+(`core/fonts.py`) - never installed into the OS font directory. The check
+is scoped to the styles actually being applied (`core/fonts.font_referenced_in`),
+so downloading a collection whose style doesn't use the font never shows
+the warning; if registration does fail for a style that needs it, a
+warning is shown once instead of silently rendering the wrong symbols.
 
 ## Catalog structure (STAC)
 

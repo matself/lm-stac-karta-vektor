@@ -105,17 +105,20 @@ området eller tidsfiltret.
 ## 5. Välj och ladda ned
 
 1. I gruppen **Träffar** ser ni en tabell med samling, namn, typ, datum och
-   storlek för varje träff. Kryssa i de rader ni vill ha, eller använd
-   **Markera alla** / **Avmarkera alla**.
+   storlek för varje träff. Namn-kolumnen visar kommunnamn och kommunkod
+   (t.ex. "Skellefteå (2482)") när Lantmäteriets egen beskrivning av
+   objektet följer mönstret "... för `<kommun>` kommun" - annars visas bara
+   kommunkoden. Kryssa i de rader ni vill ha, eller använd **Markera alla**
+   / **Avmarkera alla**.
 2. Under **Hämta**, välj en målmapp med mappväljaren.
 3. Kryssa i **Lägg till i projektet när klart** om ni vill att de
    nedladdade lagren ska läggas till i QGIS-projektet automatiskt när
    nedladdningen är klar. Vektordata levereras som `.zip`-filer som
    pluginet packar upp automatiskt och letar efter GeoPackage-/Shapefile-/
    GML-lager i. Lager som pluginet har en officiell Lantmäteriet-stil för
-   (just nu Fastighetsindelnings sex geometriskikt) manérsätts automatiskt
-   samma sätt som Lantmäteriets egen QGIS-manérfil - se
-   [stilfiler.md](stilfiler.md) för detaljer och vilken symbolfont som
+   (just nu Fastighetsindelnings sex geometriskikt och Marktäckes tre)
+   manérsätts automatiskt samma sätt som Lantmäteriets egen QGIS-manérfil -
+   se [stilfiler.md](stilfiler.md) för detaljer och vilken symbolfont som
    bundlas för det.
 4. Klicka **Hämta valda**. Är den sammanlagda storleken över 2 GB frågar
    pluginet om bekräftelse innan nedladdningen startar.

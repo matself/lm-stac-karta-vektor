@@ -16,6 +16,7 @@ from pathlib import Path
 from qgis.core import QgsMapLayer, QgsVectorLayer
 
 from ..config import PLUGIN_NAME
+from .fonts import ensure_font, font_referenced_in
 
 STYLES_DIR = Path(__file__).resolve().parent.parent / "styles"
 # Only symbology and labels: the rest of the QML (fields, forms) belongs to the data.
@@ -28,12 +29,19 @@ def find_style(collection_id: str, table: str) -> Path | None:
     return path if path.exists() else None
 
 
-def apply_style(layer: QgsVectorLayer, collection_id: str, table: str) -> bool:
+def apply_style(layer: QgsVectorLayer, collection_id: str, table: str) -> tuple[bool, bool]:
     """Apply the collection table's style if there is one, and store it as
-    default in the GeoPackage."""
+    default in the GeoPackage.
+
+    Returns (applied, font_missing). font_missing is only True when the
+    style we actually applied references a font that isn't available -
+    callers should warn about the font once per batch, not for every
+    download regardless of whether it needed it at all.
+    """
     path = find_style(collection_id, table)
     if path is None:
-        return False
+        return False, False
+    font_missing = font_referenced_in(path) and not ensure_font()
     _message, ok = layer.loadNamedStyle(str(path), CATEGORIES)
     if ok:
         # Default style in the GeoPackage's layer_styles table: the file opens
@@ -43,4 +51,4 @@ def apply_style(layer: QgsVectorLayer, collection_id: str, table: str) -> bool:
         else:
             layer.saveStyleToDatabase(f"{collection_id}_{table}", PLUGIN_NAME, True, "", CATEGORIES)
         layer.triggerRepaint()
-    return ok
+    return ok, font_missing

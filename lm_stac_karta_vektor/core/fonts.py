@@ -41,3 +41,14 @@ def ensure_font() -> bool:
         return False
     families = QFontDatabase.applicationFontFamilies(font_id)
     return FONT_FAMILY in families
+
+
+def font_referenced_in(qml_path: Path) -> bool:
+    """True if the given style file actually uses FONT_FAMILY (e.g. a
+    FontMarker symbol layer), so callers only need to warn about the font
+    when a style that needs it was actually applied - not for every
+    download regardless of whether any downloaded layer's style uses it."""
+    try:
+        return FONT_FAMILY in qml_path.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return False
