@@ -1,5 +1,5 @@
 [general]
-name=Geodata Downloader (Lantmäteriet) - STAC-vektor
+name=Geodata: Vektor (Lantmäteriet)
 qgisMinimumVersion=3.44
 qgisMaximumVersion=4.99
 description=Search and download open vector data from Lantmäteriet's STAC-vektor service.
@@ -12,8 +12,8 @@ about=Search and download open vector data directly from Lantmäteriet's (the Sw
     (buildings), Marktäcke (land cover), Fastighetsindelning (cadastral boundaries),
     Belägenhetsadresser (addresses), Ortnamn (place names) and Kommun/lan/rike
     (municipality/county/country). Independent plugin, not developed by Lantmäteriet.
-    Sibling plugin to Geodata Downloader (Lantmäteriet), which covers orthophoto and
-    elevation data. Search works with any valid key; download requires a system
+    Sibling plugin to Geodata: Ortofoto & höjd (Lantmäteriet), which covers
+    orthophoto and elevation data. Search works with any valid key; download requires a system
     account that has ordered the right product on Geotorget. Login goes through
     QGIS' own Authentication Manager (OAuth2 client credentials) - the plugin does
     not store any credentials itself. Covers Sweden only. The user interface is in
