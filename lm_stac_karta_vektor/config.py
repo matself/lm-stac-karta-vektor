@@ -9,7 +9,7 @@ from dataclasses import dataclass
 # of the interface. metadata.txt's own `name=` field is the English display
 # name plugins.qgis.org requires for the store listing; the two are
 # deliberately different strings for different audiences.
-PLUGIN_NAME = "Geodatahämtning (Lantmäteriet) – STAC-vektor"
+PLUGIN_NAME = "Geodata: Vektor (Lantmäteriet)"
 SETTINGS_PREFIX = "lm_stac_karta_vektor"
 
 API_URL = "https://api.lantmateriet.se"
