@@ -1,4 +1,4 @@
-# Geodata Downloader (Lantmäteriet) - STAC-vektor
+# Geodata: Vektor (Lantmäteriet)
 
 An independent QGIS plugin (not developed by Lantmäteriet, the Swedish
 mapping, cadastral and land registration authority) for searching and
@@ -16,7 +16,7 @@ tables (currently `fastighetsindelning`) - see
 [Official styling](#official-styling) below.
 
 Sibling plugin to [`matself/LM-STAC-Downloader`](https://github.com/matself/LM-STAC-Downloader)
-("Geodata Downloader (Lantmäteriet)"), which covers orthophoto and elevation
+("Geodata: Ortofoto & höjd (Lantmäteriet)"), which covers orthophoto and elevation
 data (STAC-bild/STAC-hojd). The architecture and interface intentionally
 match: the same kind of authentication group, the same
 `QgsFileDownloader`-based download queue, the same settings persistence. An
@@ -226,9 +226,9 @@ Not yet on the official plugins.qgis.org repository. Two options meanwhile:
 - **Custom plugin source**: *Plugins → Manage and Install Plugins →
   Settings → Add...*, URL
   `https://raw.githubusercontent.com/matself/lm-stac-karta-vektor/master/plugins.xml`
-  (check "Show also experimental plugins"). Search for "Geodata Downloader
-  (Lantmäteriet) - STAC-vektor" and install; future releases then show up
-  as regular updates.
+  (check "Show also experimental plugins"). Search for "Geodata: Vektor
+  (Lantmäteriet)" and install; future releases then show up as regular
+  updates.
 - **Install from ZIP**: download the zip from
   [Releases](https://github.com/matself/lm-stac-karta-vektor/releases) and
   use *Install from ZIP*.

@@ -1,4 +1,4 @@
-# Användarhandledning: Geodata Downloader (Lantmäteriet) - STAC-vektor
+# Användarhandledning: Geodata: Vektor (Lantmäteriet)
 
 Den här guiden går igenom hela flödet i pluginet på svenska: installation,
 inloggning, sökning, nedladdning och felsökning. För en kort teknisk
@@ -20,7 +20,7 @@ oavsett var man söker, och Lantmäteriets egen produktsida för den hänvisar
 till en FTP-plats i stället för API-beställning.
 
 Pluginet är fristående och inte utvecklat av Lantmäteriet. Det är
-systerplugin till [Geodata Downloader (Lantmäteriet)](https://github.com/matself/LM-STAC-Downloader),
+systerplugin till [Geodata: Ortofoto & höjd (Lantmäteriet)](https://github.com/matself/LM-STAC-Downloader),
 som på samma sätt täcker ortofoto och höjddata.
 
 ## 1. Installation
@@ -36,7 +36,7 @@ som på samma sätt täcker ortofoto och höjddata.
 
 2. Starta QGIS och öppna **Insticksprogram → Hantera och installera
    insticksprogram → Installerade**.
-3. Kryssa i "Geodata Downloader (Lantmäteriet) - STAC-vektor" för att
+3. Kryssa i "Geodata: Vektor (Lantmäteriet)" för att
    aktivera det.
 4. En ny panel-ikon dyker upp i verktygsfältet, och pluginet läggs även
    till under **Webb**-menyn.

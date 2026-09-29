@@ -4,6 +4,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-29
+
+### Changed
+
+- Renamed to "Geodata: Vektor (Lantmäteriet)" and gave the plugin a new
+  icon, as part of a shared naming/icon scheme across all four
+  Lantmäteriet-related plugins (Geodata: Vektor / Ortofoto & höjd / NGP /
+  Markhöjd direkt) so they cluster together in the QGIS plugin manager and
+  read as one family. "Lantmäteriet" stays a trailing, parenthetical
+  source attribution rather than moving to the front, to avoid implying
+  the plugin is made by them. `PLUGIN_NAME` (dock title, message-bar
+  prefix, menu entry, task-log category) updated to match.
+
 ### Fixed
 
 - `ortnamn_ortnamn.qml` had no scale-based label visibility (matching
