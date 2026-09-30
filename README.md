@@ -221,17 +221,9 @@ is currently disabled in the interface, see above):
 
 ## Install
 
-Not yet on the official plugins.qgis.org repository. Two options meanwhile:
-
-- **Custom plugin source**: *Plugins → Manage and Install Plugins →
-  Settings → Add...*, URL
-  `https://raw.githubusercontent.com/matself/lm-stac-karta-vektor/master/plugins.xml`
-  (check "Show also experimental plugins"). Search for "Geodata: Vektor
-  (Lantmäteriet)" and install; future releases then show up as regular
-  updates.
-- **Install from ZIP**: download the zip from
-  [Releases](https://github.com/matself/lm-stac-karta-vektor/releases) and
-  use *Install from ZIP*.
+Download the zip from
+[Releases](https://github.com/matself/lm-stac-karta-vektor/releases) and
+use *Plugins → Manage and Install Plugins → Install from ZIP*.
 
 For development, link or copy the `lm_stac_karta_vektor/` folder into your
 QGIS profile's plugin directory instead, e.g. on Windows:
