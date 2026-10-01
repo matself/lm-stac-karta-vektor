@@ -3,7 +3,7 @@ name=Geodata: Vektor (Lantmäteriet)
 qgisMinimumVersion=3.44
 qgisMaximumVersion=4.99
 description=Search and download open vector data from Lantmäteriet's STAC-vektor service.
-version=1.0.0
+version=1.0.1
 author=Mats Elfström
 email=mats.elfstrom@gmail.com
 
@@ -30,7 +30,8 @@ about=Search and download open vector data directly from Lantmäteriet's (the Sw
 tracker=https://github.com/matself/lm-stac-karta-vektor/issues
 repository=https://github.com/matself/lm-stac-karta-vektor
 homepage=https://github.com/matself/lm-stac-karta-vektor
-changelog=1.0.0: First stable release. Renamed to "Geodata: Vektor (Lantmäteriet)" with a new icon,
+changelog=1.0.1: Moved the toolbar icon and menu entry from the Web toolbar/menu to the Plugins toolbar/menu.
+    1.0.0: First stable release. Renamed to "Geodata: Vektor (Lantmäteriet)" with a new icon,
     part of a shared scheme across the four Lantmäteriet plugins. Official
     Lantmäteriet styling for Ortnamn (adapted from Topo10's rule-based
     labeling) and self-designed styling for Kommun/lan/rike (no official

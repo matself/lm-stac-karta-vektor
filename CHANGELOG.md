@@ -4,6 +4,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-01
+
+### Changed
+
+- Moved the toolbar icon and menu entry from the Web toolbar/menu to the Plugins toolbar/menu
+
 ## [1.0.0] - 2026-09-30
 
 ### Changed
