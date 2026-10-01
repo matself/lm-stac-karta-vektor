@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <plugins>
-  <pyqgis_plugin name="Geodata: Vektor (Lantmäteriet)" version="1.0.0" plugin_id="lm_stac_karta_vektor">
+  <pyqgis_plugin name="Geodata: Vektor (Lantmäteriet)" version="1.0.1" plugin_id="lm_stac_karta_vektor">
     <description>Search and download open vector data from Lantmäteriet's STAC-vektor service.</description>
     <about>Search and download open vector data directly from Lantmäteriet's (the Swedish
 mapping, cadastral and land registration authority) STAC-vektor service: Byggnader
@@ -21,14 +21,14 @@ Fastighetsindelning and Marktäcke); a bundled font (LMTopografisymboler,
 downloaded from Lantmäteriet's own product documentation) is registered for
 the QGIS session only, never installed system-wide, see the README for
 details and license note.</about>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <qgis_minimum_version>3.44</qgis_minimum_version>
     <qgis_maximum_version>4.99</qgis_maximum_version>
     <homepage>https://github.com/matself/lm-stac-karta-vektor</homepage>
-    <file_name>lm_stac_karta_vektor.1.0.0.zip</file_name>
+    <file_name>lm_stac_karta_vektor.1.0.1.zip</file_name>
     <icon>https://raw.githubusercontent.com/matself/lm-stac-karta-vektor/master/lm_stac_karta_vektor/icon.svg</icon>
     <author_name>Mats Elfström</author_name>
-    <download_url>https://github.com/matself/lm-stac-karta-vektor/releases/download/v1.0.0/lm_stac_karta_vektor.1.0.0.zip</download_url>
+    <download_url>https://github.com/matself/lm-stac-karta-vektor/releases/download/v1.0.1/lm_stac_karta_vektor.1.0.1.zip</download_url>
     <uploaded_by>Mats Elfström</uploaded_by>
     <experimental>False</experimental>
     <deprecated>False</deprecated>
