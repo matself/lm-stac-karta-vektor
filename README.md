@@ -1,3 +1,5 @@
+<img src="lm_stac_karta_vektor/icon.png" alt="" width="72" align="right">
+
 # Geodata: Vektor (Lantmäteriet)
 
 An independent QGIS plugin (not developed by Lantmäteriet, the Swedish
