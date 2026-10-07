@@ -18,11 +18,8 @@ about=Search and download open vector data directly from Lantmäteriet's (the Sw
     QGIS' own Authentication Manager (OAuth2 client credentials) - the plugin does
     not store any credentials itself. Covers Sweden only. The user interface is in
     Swedish; see the README for an English explanation of every dialog and message.
-    STAC-karta (raster maps) is not offered: its only open collection is not tiled
-    by area and Lantmäteriet's own product page for it points to a plain FTP mirror
-    instead of API access, see the README for details. Downloaded layers are styled
-    with Lantmäteriet's own official QGIS symbology where available (currently
-    Fastighetsindelning and Marktäcke); a bundled font (LMTopografisymboler,
+    Downloaded layers are styled with Lantmäteriet's own official QGIS symbology 
+    where available (currently Fastighetsindelning and Marktäcke); a bundled font (LMTopografisymboler,
     downloaded from Lantmäteriet's own product documentation) is registered for
     the QGIS session only, never installed system-wide, see the README for
     details and license note.
@@ -32,19 +29,8 @@ repository=https://github.com/matself/lm-stac-karta-vektor
 homepage=https://github.com/matself/lm-stac-karta-vektor
 changelog=1.0.2: Renamed an internal constant to avoid a Bandit false positive. No functional changes.
     1.0.1: Moved the toolbar icon and menu entry from the Web toolbar/menu to the Plugins toolbar/menu.
-    1.0.0: First stable release. Renamed to "Geodata: Vektor (Lantmäteriet)" with a new icon,
-    part of a shared scheme across the four Lantmäteriet plugins. Official
-    Lantmäteriet styling for Ortnamn (adapted from Topo10's rule-based
-    labeling) and self-designed styling for Kommun/lan/rike (no official
-    style exists). Optional per-län split for Ortnamn's single nationwide
-    file into 21 more manageable GeoPackages. Layers are now grouped and
-    drawn in Lantmäteriet's own cartographic order. See CHANGELOG.md.
-    0.1.0: Initial release. Search and download from STAC-vektor (Byggnader,
-    Marktäcke, Fastighetsindelning, Belägenhetsadresser, Ortnamn, Kommun/lan/rike)
-    with OAuth2 login via QGIS' Authentication Manager. STAC-karta is excluded, see
-    the README.
-
-category=Web
+    
+category=Plugin
 icon=icon.svg
 tags=lantmateriet,stac,geodata,vector,download,sweden,geotorget,open data
 license=GPL-3.0-or-later
