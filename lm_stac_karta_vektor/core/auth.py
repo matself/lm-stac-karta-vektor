@@ -15,7 +15,7 @@ import json
 
 from qgis.core import QgsApplication, QgsAuthMethodConfig
 
-from ..config import TOKEN_URL
+from ..config import OAUTH_ENDPOINT_URL
 
 # Values from QgsAuthOAuth2Config (not exposed to Python).
 _GRANT_FLOW_CLIENT_CREDENTIALS = 4
@@ -38,7 +38,7 @@ def create_client_credentials_config(name: str, client_id: str, client_secret: s
         "configType": _CONFIG_TYPE_CUSTOM,
         "grantFlow": _GRANT_FLOW_CLIENT_CREDENTIALS,
         "name": name,
-        "tokenUrl": TOKEN_URL,
+        "tokenUrl": OAUTH_ENDPOINT_URL,
         "clientId": client_id,
         "clientSecret": client_secret,
         "accessMethod": _ACCESS_METHOD_HEADER,

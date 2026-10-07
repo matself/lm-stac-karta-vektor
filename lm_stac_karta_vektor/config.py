@@ -13,7 +13,7 @@ PLUGIN_NAME = "Geodata: Vektor (Lantmäteriet)"
 SETTINGS_PREFIX = "lm_stac_karta_vektor"
 
 API_URL = "https://api.lantmateriet.se"
-TOKEN_URL = "https://apimanager.lantmateriet.se/oauth2/token"
+OAUTH_ENDPOINT_URL = "https://apimanager.lantmateriet.se/oauth2/token"
 
 # The API takes the WGS 84 bbox of plain STAC.
 SEARCH_CRS = "EPSG:4326"

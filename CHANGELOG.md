@@ -4,6 +4,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-07
+
+### Changed
+
+- Renamed the internal `TOKEN_URL` constant to `OAUTH_ENDPOINT_URL` to avoid a Bandit false positive (B105) in the plugin repository security scan. No functional changes.
+
 ## [1.0.1] - 2026-10-01
 
 ### Changed
