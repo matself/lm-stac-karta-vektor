@@ -67,14 +67,19 @@ illustrativt läge)"** ur `Topografi10_vektor_thematic.qlr`
 (`byggnadsverk_ln12.gpkg|layername=byggnad`). Regelbaserad renderare på
 `objekttypnr` (2061 Bostad, 2062 Industri, 2063 Samhällsfunktion,
 2064 Verksamhet, 2065 Ekonomibyggnad, 2066 Komplementbyggnad,
-2067 Övrig byggnad). Varje regel har filtret
-`NOT "insamlingslage" = 'Illustrativt läge'`, så objekt med det läget
-ritas inte; QLR:en har ett separat lager för dem som inte tagits med.
+2067 Övrig byggnad). Reglerna har filtret
+`NOT "insamlingslage" = 'Illustrativt läge'`. QLR:en har ett andra lager,
+**"Byggnad (endast schabloner med illustrativt läge)"**, med egna symboler
+och motsvarande regler utan `NOT`; dess sju regler (symbol 7-13, etikett
+"... (illustrativt läge)") är sammanslagna i samma QML, så att objekt med
+det läget ritas i stället för att försvinna (t.ex. 1 komplementbyggnad av
+23 560 i Tomelilla). Samlingen `byggnader` ("Byggnad Nedladdning, vektor")
+innehåller bara tabellen `byggnad` (byggnadsytor), bekräftat av användaren;
+punkt- och linjetabellerna i QLR:en hör till andra produkter, t.ex.
+Byggnad vektor/Topografi 10.
 Fältnamnen verifierades mot en riktig `byggnadsverk_*.gpkg` (tabell
 `byggnad` med `objekttypnr` och `insamlingslage`). `renderer-v2` kopierades
-direkt ur QLR-XML:en (ingen etikettsättning i detta lager). Övriga tabeller
-i samlingen (`byggnadspunkt`, `byggnadsanlaggningspunkt`,
-`byggnadsanlaggningslinje`) saknar stil.
+direkt ur QLR-XML:en (ingen etikettsättning i detta lager). 
 
 ## Kommun, län och rike - egen stil (inget officiellt manér finns)
 

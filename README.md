@@ -160,10 +160,11 @@ For `fastighetsindelning`, `marktacke` and the `byggnad` table of
 `byggnader` this is Lantmäteriet's own
 official QGIS symbology, extracted from the `.qlr` manér file published on
 each product's Geotorget documentation page (for `byggnad`, the layer
-"Byggnad (alla utom schabloner med illustrativt läge)" of
+"Byggnad (alla utom schabloner med illustrativt läge)" and
+"Byggnad (endast schabloner med illustrativt läge)" of
 `Topografi10_vektor_thematic.qlr`: rule-based on `objekttypnr`, seven
 building types, features with `insamlingslage` = "Illustrativt läge"
-are not drawn). No such file exists for
+are drawn with the QLR's separate "(illustrativt läge)" symbols). No such file exists for
 `kommun-lan-rike` (it's a newer NGP "Test"-status product without a
 published style package - see [docs/stilfiler.md](docs/stilfiler.md) for
 what was checked before concluding that), so its style is a simple
