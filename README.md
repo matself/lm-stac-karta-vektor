@@ -156,9 +156,14 @@ and labeling are applied, not fields/forms, and the style is also saved
 into the GeoPackage's own `layer_styles` table so the file stays styled
 even opened without this plugin later.
 
-For `fastighetsindelning` and `marktacke` this is Lantmäteriet's own
+For `fastighetsindelning`, `marktacke` and the `byggnad` table of
+`byggnader` this is Lantmäteriet's own
 official QGIS symbology, extracted from the `.qlr` manér file published on
-each product's Geotorget documentation page. No such file exists for
+each product's Geotorget documentation page (for `byggnad`, the layer
+"Byggnad (alla utom schabloner med illustrativt läge)" of
+`Topografi10_vektor_thematic.qlr`: rule-based on `objekttypnr`, seven
+building types, features with `insamlingslage` = "Illustrativt läge"
+are not drawn). No such file exists for
 `kommun-lan-rike` (it's a newer NGP "Test"-status product without a
 published style package - see [docs/stilfiler.md](docs/stilfiler.md) for
 what was checked before concluding that), so its style is a simple

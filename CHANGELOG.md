@@ -4,6 +4,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Official Topo10 styling for the `byggnad` table of the `byggnader` collection (rule-based on building type, taken from the "Byggnad (alla utom schabloner med illustrativt läge)" layer)
+
 ## [1.0.2] - 2026-10-07
 
 ### Changed

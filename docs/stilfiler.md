@@ -60,6 +60,22 @@ mot en riktig nedladdning (redan öppen i användarens QGIS-projekt,
 `marktacke_mark.qml` refererar `LMTopografisymboler` (samma font som
 fastighetsindelning), de andra två gör det inte.
 
+## Byggnader - Topo10:s byggnadsstil
+
+`byggnader_byggnad.qml` är lagret **"Byggnad (alla utom schabloner med
+illustrativt läge)"** ur `Topografi10_vektor_thematic.qlr`
+(`byggnadsverk_ln12.gpkg|layername=byggnad`). Regelbaserad renderare på
+`objekttypnr` (2061 Bostad, 2062 Industri, 2063 Samhällsfunktion,
+2064 Verksamhet, 2065 Ekonomibyggnad, 2066 Komplementbyggnad,
+2067 Övrig byggnad). Varje regel har filtret
+`NOT "insamlingslage" = 'Illustrativt läge'`, så objekt med det läget
+ritas inte; QLR:en har ett separat lager för dem som inte tagits med.
+Fältnamnen verifierades mot en riktig `byggnadsverk_*.gpkg` (tabell
+`byggnad` med `objekttypnr` och `insamlingslage`). `renderer-v2` kopierades
+direkt ur QLR-XML:en (ingen etikettsättning i detta lager). Övriga tabeller
+i samlingen (`byggnadspunkt`, `byggnadsanlaggningspunkt`,
+`byggnadsanlaggningslinje`) saknar stil.
+
 ## Kommun, län och rike - egen stil (inget officiellt manér finns)
 
 Till skillnad från de två ovan finns **ingen** officiell manérfil för
