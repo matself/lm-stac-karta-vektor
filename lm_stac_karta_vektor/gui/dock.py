@@ -28,7 +28,13 @@ from qgis.core import (
     QgsSettings,
     QgsVectorLayer,
 )
-from qgis.gui import QgsAuthConfigSelect, QgsExtentGroupBox, QgsFileWidget, QgsRubberBand
+from qgis.gui import (
+    QgsAuthConfigSelect,
+    QgsExtentGroupBox,
+    QgsExtentWidget,
+    QgsFileWidget,
+    QgsRubberBand,
+)
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
@@ -73,6 +79,7 @@ from ..core.clip import (
     ClipJob,
     ClipTask,
     clip_extent,
+    extent_in_crs,
     item_crs,
     grid_size,
     native_resolution,
@@ -158,9 +165,12 @@ class StacDock(QDockWidget):
         # itself draws nothing while it follows the map view.
         self._extent_band = QgsRubberBand(self.canvas, Qgis.GeometryType.Polygon)
         self._extent_band.setColor(QColor(220, 30, 30))
-        self._extent_band.setFillColor(QColor(220, 30, 30, 30))
+        self._extent_band.setFillColor(QColor(0, 0, 0, 0))  # outline only
         self._extent_band.setWidth(2)
         self.visibilityChanged.connect(self._update_clip_info)
+        # Set by "Rensa ruta"; the outline stays hidden until a new extent is
+        # drawn or chosen, or a new search is made.
+        self._band_cleared = False
 
         self._restore_settings()
         self._reload_collections()
@@ -219,7 +229,7 @@ class StacDock(QDockWidget):
         self.extent_group.setCurrentExtent(self.canvas.extent(), canvas_crs)
         self.extent_group.setOutputExtentFromCurrent()
         self.extent_group.setMapCanvas(self.canvas)
-        self.extent_group.extentChanged.connect(self._update_clip_info)
+        self.extent_group.extentChanged.connect(self._on_extent_changed)
         layout.addWidget(self.extent_group)
 
         self.date_group = QGroupBox("Tidsfilter")
@@ -239,6 +249,16 @@ class StacDock(QDockWidget):
         date_row.addWidget(self.date_to)
         self.date_group.setLayout(date_row)
         layout.addWidget(self.date_group)
+
+        # The topowebb clip area is outlined on the canvas (see
+        # _update_extent_band); this hides the outline, e.g. when it covers a
+        # freshly added clip. Only shown for STAC-karta.
+        self.clear_band_btn = QPushButton("Rensa ruta")
+        self.clear_band_btn.setToolTip(
+            "Döljer rutan på kartan tills du ritar eller väljer en ny utbredning."
+        )
+        self.clear_band_btn.clicked.connect(self._clear_band)
+        layout.addWidget(self.clear_band_btn)
 
         self.search_btn = QPushButton("Sök")
         self.search_btn.clicked.connect(self._start_search)
@@ -536,6 +556,7 @@ class StacDock(QDockWidget):
         self.tree.blockSignals(False)
         for column in range(self.tree.columnCount()):
             self.tree.resizeColumnToContents(column)
+        self._band_cleared = False
         self._update_summary()
         self._update_clip_info()
 
@@ -585,10 +606,44 @@ class StacDock(QDockWidget):
         text = f"{resolution:.2f}".rstrip("0").rstrip(".").replace(".", ",")
         return f"{text} m" if epsg == 3006 else f"{text} kartenheter"
 
+    def _on_extent_changed(self, *_args) -> None:
+        # While the extent just follows the map view, panning must not bring
+        # a cleared outline back; a drawn or chosen extent does.
+        if self.extent_group.extentState() != QgsExtentWidget.ExtentState.CurrentExtent:
+            self._band_cleared = False
+        self._update_clip_info()
+
+    def _clear_band(self) -> None:
+        self._band_cleared = True
+        self._update_clip_info()
+
+    def _update_extent_band(self) -> None:
+        """Outline the area a topowebb clip would cover, in the file's CRS.
+        Shown for STAC-karta while in clip mode, even before a search (the
+        CRS then defaults to SWEREF 99 TM), unless cleared."""
+        self._extent_band.reset(Qgis.GeometryType.Polygon)
+        is_karta = self.service_combo.currentData() == "stac-karta"
+        self.clear_band_btn.setVisible(is_karta)
+        if not (
+            is_karta
+            and self.clip_mode.currentData() == "clip"
+            and self.isVisible()
+            and not self._band_cleared
+        ):
+            return
+        extent = self.extent_group.outputExtent()
+        if extent.isEmpty():
+            return
+        raster_items = [i for i in self._checked_items() if i.is_raster_map] or [
+            i for i in self.items if i.is_raster_map
+        ]
+        crs = item_crs(raster_items[0]) if raster_items else QgsCoordinateReferenceSystem("EPSG:3006")
+        self._extent_band.setToGeometry(QgsGeometry.fromRect(extent_in_crs(extent, crs)), crs)
+
     def _update_clip_info(self, *_args) -> None:
         """Show/hide the topowebb group and refresh the resolution labels and
         the size estimate for the current extent and selection."""
-        self._extent_band.reset(Qgis.GeometryType.Polygon)
+        self._update_extent_band()
         raster_items = [i for i in self.items if i.is_raster_map]
         self.clip_group.setVisible(bool(raster_items))
         if not raster_items:
@@ -612,9 +667,6 @@ class StacDock(QDockWidget):
             self.clip_res.blockSignals(False)
 
         extent = self.extent_group.outputExtent()
-        if not extent.isEmpty() and self.isVisible():
-            band_extent = clip_extent(extent, reference)
-            self._extent_band.setToGeometry(QgsGeometry.fromRect(band_extent), item_crs(reference))
         if not checked:
             self.clip_info.setText("Markera en eller flera rader att klippa ut.")
             return

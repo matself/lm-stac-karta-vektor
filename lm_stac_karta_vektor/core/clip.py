@@ -56,12 +56,17 @@ def item_crs(item: StacItem) -> QgsCoordinateReferenceSystem:
     return QgsCoordinateReferenceSystem(f"EPSG:{item.epsg}")
 
 
-def clip_extent(extent_wgs84: QgsRectangle, item: StacItem) -> QgsRectangle:
-    """The search extent (EPSG:4326) as a bounding box in the item's CRS."""
+def extent_in_crs(extent_wgs84: QgsRectangle, crs: QgsCoordinateReferenceSystem) -> QgsRectangle:
+    """The search extent (EPSG:4326) as a bounding box in `crs`."""
     transform = QgsCoordinateTransform(
-        QgsCoordinateReferenceSystem(SEARCH_CRS), item_crs(item), QgsProject.instance()
+        QgsCoordinateReferenceSystem(SEARCH_CRS), crs, QgsProject.instance()
     )
     return transform.transformBoundingBox(extent_wgs84)
+
+
+def clip_extent(extent_wgs84: QgsRectangle, item: StacItem) -> QgsRectangle:
+    """The search extent (EPSG:4326) as a bounding box in the item's CRS."""
+    return extent_in_crs(extent_wgs84, item_crs(item))
 
 
 def grid_size(extent: QgsRectangle, resolution: float) -> tuple[int, int]:

@@ -77,7 +77,10 @@ Därför visas gruppen **Rasterkarta (topowebb)** när du har sökt:
    upplösningen i kartenheter (cirka 0,6 m per pixel i Sverige vid full
    upplösning).
 3. **Format** är GeoTIFF (komprimerad) eller GeoPackage.
-4. Texten längst ned i gruppen visar antal pixlar och största möjliga
+4. Området som klipps ut ritas som en röd kantlinje på kartan, redan innan du
+   söker. Knappen **Rensa ruta** mellan Tidsfilter och Sök döljer den, till exempel när
+   utklippet lagts till och rutan ligger över det. Den kommer tillbaka när du
+   ritar eller väljer en ny utbredning, eller söker om. Texten längst ned i gruppen visar antal pixlar och största möjliga
    storlek innan komprimering. Större utklipp än 4 miljarder pixlar
    avvisas, och över 2 GB frågar pluginet om bekräftelse.
 5. Markera en eller flera rader, välj målmapp och klicka **Hämta valda**.

@@ -51,6 +51,7 @@ Opened from the Web menu or the web toolbar (button "Geodata Downloader
 | Utbredning | Extent | Standard QGIS extent widget (`QgsExtentGroupBox`): current map view, a layer's extent, drawing a box, or manual coordinates |
 | Tidsfilter | Time filter | Optional checkable date-from/date-to range |
 | Från / Till | From / To | The two date fields in the time filter |
+| Rensa ruta | Clear outline | Shown for STAC-karta, between Tidsfilter and Sök. Hides the red outline of the topowebb clip area on the map canvas. It returns when a new extent is drawn or chosen, or a new search is made (panning does not bring it back while the extent follows the map view) |
 | Sök | Search | Runs the STAC search for the selected collections and area |
 | Träffar | Hits | Group listing the search results as a table (name, collection, type, date, size). The "name" column shows the kommun name and code (e.g. "Skellefteå (2482)") when the item's STAC title follows Lantmäteriet's "... för `<kommun>` kommun" phrasing, otherwise just the item id |
 | Markera alla | Select all | Checks every hit |
