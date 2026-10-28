@@ -7,11 +7,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Support for the open `topowebb` raster map (STAC-karta, "Topografisk webbkarta Nedladdning, raster"). The items are 140-175 GB whole-country GeoPackages, so the plugin can cut out just the chosen extent straight from the remote file (HTTP Range via GDAL `/vsicurl/`), as a compressed GeoTIFF or GeoPackage at a selectable resolution, in a background task with progress and cancel. Downloading the whole file is still available.
-- The area a topowebb clip will cover is outlined (outline only, no fill) on the map canvas, in the file's coordinate system, while the clip mode is active. It follows the extent widget, the selected rows and the dock's visibility. A "Rensa ruta" button above Sök (STAC-karta only) hides it, so it doesn't cover a freshly added clip; it returns when a new extent is drawn or chosen, or on a new search. The outline is shown as soon as STAC-karta is selected, before any search.
+- The area a topowebb clip will cover is outlined (outline only, no fill) on the map canvas, in the file's coordinate system, while the clip mode is active. It follows the extent widget, the selected rows and the dock's visibility. A "Rensa ruta" button above Sök (STAC-karta only) hides it, so it doesn't cover a freshly added clip; it returns when a new extent is drawn or chosen, or on a new search. The outline is shown as soon as STAC-karta is selected, before any search. It replaces the grey rectangle that the extent widget's "Draw on Canvas" tool leaves behind, and "Rensa ruta" removes that one too.
 
 ### Changed
 
+- The time filter's default range is now the last five years up to today (the "Till" date used to default to 2000-01-01).
 - STAC-karta is now offered as a service next to STAC-vektor (the military maps `nmk50`/`nmk250` remain hidden).
+- Made the dock shorter (smaller Samlingar and Träffar lists), and the mouse wheel now scrolls the dock past combo boxes and date fields instead of changing their value unless the field has focus.
 
 ## [1.0.3] - 2026-10-09
 

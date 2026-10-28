@@ -33,9 +33,10 @@ from qgis.gui import (
     QgsExtentGroupBox,
     QgsExtentWidget,
     QgsFileWidget,
+    QgsMapToolExtent,
     QgsRubberBand,
 )
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import QCoreApplication, QDate, QEvent, QObject, Qt
 from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView,
@@ -112,6 +113,22 @@ def _format_bytes(size: int | None) -> str:
     return ""
 
 
+class _IgnoreWheelUnlessFocused(QObject):
+    """Let the mouse wheel scroll the dock past combo boxes and date fields
+    instead of changing their value, unless the field has keyboard focus."""
+
+    def __init__(self, scroll_area: QScrollArea, parent=None):
+        super().__init__(parent)
+        self._viewport = scroll_area.viewport()
+
+    def eventFilter(self, obj, event) -> bool:
+        if event.type() == QEvent.Type.Wheel and not obj.hasFocus():
+            # Scroll the dock instead of the field.
+            QCoreApplication.sendEvent(self._viewport, event)
+            return True
+        return False
+
+
 class _SortableItem(QTreeWidgetItem):
     """Tree item that sorts the size column by its numeric value, not text."""
 
@@ -160,6 +177,11 @@ class StacDock(QDockWidget):
         scroll.setWidgetResizable(True)
         scroll.setWidget(body)
         self.setWidget(scroll)
+
+        self._wheel_filter = _IgnoreWheelUnlessFocused(scroll, self)
+        for field in body.findChildren(QComboBox) + body.findChildren(QDateEdit):
+            field.setFocusPolicy(Qt.FocusPolicy.StrongFocus)  # no focus from wheel
+            field.installEventFilter(self._wheel_filter)
 
         # Outlines the area a topowebb clip will cover; the extent widget
         # itself draws nothing while it follows the map view.
@@ -217,7 +239,7 @@ class StacDock(QDockWidget):
         layout.addWidget(QLabel("Samlingar"))
         self.collections_list = QListWidget()
         self.collections_list.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
-        self.collections_list.setMaximumHeight(110)
+        self.collections_list.setMaximumHeight(72)
         self.collections_list.itemChanged.connect(self._clear_results)
         layout.addWidget(self.collections_list)
 
@@ -240,12 +262,13 @@ class StacDock(QDockWidget):
         self.date_from = QDateEdit()
         self.date_from.setCalendarPopup(True)
         self.date_from.setDisplayFormat("yyyy-MM-dd")
-        self.date_from.setDate(self.date_from.date().addYears(-5))
+        self.date_from.setDate(QDate.currentDate().addYears(-5))
         date_row.addWidget(self.date_from)
         date_row.addWidget(QLabel("Till"))
         self.date_to = QDateEdit()
         self.date_to.setCalendarPopup(True)
         self.date_to.setDisplayFormat("yyyy-MM-dd")
+        self.date_to.setDate(QDate.currentDate())
         date_row.addWidget(self.date_to)
         self.date_group.setLayout(date_row)
         layout.addWidget(self.date_group)
@@ -275,7 +298,7 @@ class StacDock(QDockWidget):
         self.tree = QTreeWidget()
         self.tree.setRootIsDecorated(False)
         self.tree.setSortingEnabled(True)
-        self.tree.setMinimumHeight(180)
+        self.tree.setMinimumHeight(110)
         self.tree.setHeaderLabels(["Namn", "Samling", "Typ", "Datum", "Storlek"])
         self.tree.itemChanged.connect(self._update_summary)
         self.tree.itemChanged.connect(self._update_clip_info)
@@ -615,7 +638,15 @@ class StacDock(QDockWidget):
 
     def _clear_band(self) -> None:
         self._band_cleared = True
+        self._clear_tool_band()
         self._update_clip_info()
+
+    def _clear_tool_band(self) -> None:
+        """Remove the grey rectangle the extent widget's "Draw on Canvas"
+        tool leaves behind for as long as it is the active map tool."""
+        tool = self.canvas.mapTool()
+        if isinstance(tool, QgsMapToolExtent):
+            tool.clearRubberBand()
 
     def _update_extent_band(self) -> None:
         """Outline the area a topowebb clip would cover, in the file's CRS.
@@ -639,6 +670,8 @@ class StacDock(QDockWidget):
         ]
         crs = item_crs(raster_items[0]) if raster_items else QgsCoordinateReferenceSystem("EPSG:3006")
         self._extent_band.setToGeometry(QgsGeometry.fromRect(extent_in_crs(extent, crs)), crs)
+        # Our outline replaces the draw tool's grey rectangle.
+        self._clear_tool_band()
 
     def _update_clip_info(self, *_args) -> None:
         """Show/hide the topowebb group and refresh the resolution labels and
