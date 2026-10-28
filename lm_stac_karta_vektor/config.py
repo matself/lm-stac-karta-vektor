@@ -30,29 +30,34 @@ class Service:
     path: str
 
 
-_ALL_SERVICES = {
-    "stac-karta": Service("stac-karta", "STAC-karta (raster)", "/stac-karta/v1"),
+SERVICES = {
     "stac-vektor": Service("stac-vektor", "STAC-vektor (vektor)", "/stac-vektor/v1"),
+    "stac-karta": Service("stac-karta", "STAC-karta (raster)", "/stac-karta/v1"),
 }
 
-# STAC-karta is disabled: none of its collections can usefully be fetched
-# through this plugin right now. nmk50/nmk250 are access-restricted military
-# maps (see RESTRICTED_COLLECTIONS below). Its one open collection, topowebb
-# (CC-BY-4.0), isn't tiled by area at all - GET /collections/topowebb reports
-# a global bbox, and searching it from anywhere in Sweden returns the same 4
-# items (145-175 GB each, one per style/projection variant of the whole
-# country). Lantmäteriet's own Geotorget product page for it says the
-# product can't be ordered there and points to a plain FTP mirror instead
-# (ftp://download-opendata.lantmateriet.se/) - i.e. it isn't meant to be
-# fetched through the STAC API yet. Flip this back to _ALL_SERVICES (or add
-# "stac-karta" back in) if that changes.
-SERVICES = {k: v for k, v in _ALL_SERVICES.items() if k != "stac-karta"}
 DEFAULT_SERVICE = "stac-vektor"
 
 # Nationell militär karta (nmk50, nmk250) is access-restricted and requires
 # a system account with a separate order - it can't be downloaded through
 # plain STAC access, so it's hidden from the interface.
 RESTRICTED_COLLECTIONS = {"nmk50", "nmk250"}
+
+# STAC-karta's one open collection, topowebb (CC-BY-4.0), isn't tiled by
+# area: it has 4 items (colour/greyscale x EPSG:3006/3857), each a single
+# 140-175 GB GeoPackage of raster tiles covering the whole country (or
+# world). The server supports HTTP Range requests and GDAL can open the file
+# remotely, so the plugin can cut out just the requested extent instead of
+# downloading it all - see core/clip.py.
+RASTER_COLLECTIONS = {"topowebb"}
+
+# Native pixel size (CRS units) of the topowebb GeoPackages, by EPSG code.
+# EPSG:3857 is 2^25 pixels across the Web Mercator world.
+TOPOWEBB_NATIVE_RES = {3006: 0.5, 3857: 40075016.68557849 / 2**25}
+# Resolution choices offered for a clip, as multiples of the native pixel size.
+CLIP_FACTORS = (1, 2, 4, 8, 16, 32, 64, 128)
+# Ask for confirmation above this many (uncompressed RGBA) bytes, refuse above
+# MAX_CLIP_PIXELS.
+MAX_CLIP_PIXELS = 4_000_000_000
 
 
 def search_base_url(service_key: str) -> str:

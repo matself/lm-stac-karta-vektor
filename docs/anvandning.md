@@ -6,8 +6,9 @@ Belägenhetsadresser, Ortnamn samt Kommun, län och rike. Data är indelad per
 kommun. Kräver QGIS 3.44 eller senare. För en teknisk sammanfattning på
 engelska, se [README.md](../README.md).
 
-STAC-karta (rasterkartor) erbjuds inte, se "STAC-karta is disabled" i
-README. Pluginet är fristående och inte utvecklat av Lantmäteriet.
+Pluginet kan också hämta den öppna rasterkartan **Topografisk webbkarta
+Nedladdning, raster** (`topowebb`) från STAC-karta, se avsnitt 5. Pluginet är
+fristående och inte utvecklat av Lantmäteriet.
 
 ## 1. Skaffa inloggningsuppgifter (endast för nedladdning)
 
@@ -57,6 +58,35 @@ orsaken till "åtkomst nekad".
 5. Klicka **Hämta valda**. Över 2 GB frågar pluginet om bekräftelse.
    **Avbryt** stoppar en pågående nedladdning.
 
+## 5. Topografisk webbkarta (raster)
+
+Välj tjänsten **STAC-karta (raster)** och samlingen *Topografisk webbkarta
+Nedladdning, raster*. Sökningen ger alltid samma fyra träffar, eftersom
+kartan inte är indelad per område: färg eller nedtonad (grå), var och en i
+SWEREF 99 TM (EPSG:3006) och Web Mercator (EPSG:3857). Varje fil är en
+GeoPackage på 140-175 GB som täcker hela landet.
+
+Därför visas gruppen **Rasterkarta (topowebb)** när du har sökt:
+
+1. **Läge: Klipp ut området i Utbredning** (förval) hämtar bara det område
+   som står under **Utbredning**, direkt ur filen på Lantmäteriets server.
+   Det går snabbt: ett par kvadratkilometer i full upplösning tar några
+   sekunder. **Läge: Hämta hela filen** laddar ned hela GeoPackage-filen.
+2. **Upplösning** anger pixelstorlek. Full upplösning är 0,5 m i SWEREF 99 TM.
+   Lägre upplösning går snabbare och blir mindre. För Web Mercator anges
+   upplösningen i kartenheter (cirka 0,6 m per pixel i Sverige vid full
+   upplösning).
+3. **Format** är GeoTIFF (komprimerad) eller GeoPackage.
+4. Texten längst ned i gruppen visar antal pixlar och största möjliga
+   storlek innan komprimering. Större utklipp än 4 miljarder pixlar
+   avvisas, och över 2 GB frågar pluginet om bekräftelse.
+5. Markera en eller flera rader, välj målmapp och klicka **Hämta valda**.
+   **Lägg till i projektet när klart** lägger till utklippet som ett
+   rasterlager. **Avbryt** stoppar ett pågående utklipp.
+
+Nedladdning och utklipp kräver att systemkontot har beställt produkten
+*Topografisk webbkarta Nedladdning, raster* på Geotorget.
+
 ## Felsökning
 
 **"Välj eller skapa en autentisering först."**
@@ -81,4 +111,8 @@ sätter första gången.
 ## Kända begränsningar
 
 - Sökningen är begränsad till 1000 träffar.
-- STAC-karta erbjuds inte, se README.
+- Topowebb klipps ut i ett koordinatsystem i taget och i en upplösning som är
+  en tvåpotens av fullupplösningen. Den nedtonade och den färgade kartan är
+  separata filer och måste klippas var för sig.
+- Utklipp fungerar med både pluginets OAuth2-inloggning (Consumer Key/Secret)
+  och en Basic-inloggning.

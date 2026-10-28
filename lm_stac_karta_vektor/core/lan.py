@@ -3,7 +3,7 @@ download into more manageable per-län files.
 
 `ortnamn` is the one STAC-vektor collection Lantmäteriet delivers as a
 single national item instead of one item per kommun (see docs/stilfiler.md
-and README.md's "STAC-karta is disabled" section for the general pattern -
+and README.md's "Topowebb raster map" section for the general pattern -
 some STAC-vektor collections just aren't tiled). Every `ortnamn` feature
 carries a `lanskod` field with one of these 21 standard 2-digit codes.
 """

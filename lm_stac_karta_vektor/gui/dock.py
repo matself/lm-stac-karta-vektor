@@ -41,6 +41,7 @@ from qgis.PyQt.QtWidgets import (
     QLabel,
     QListWidget,
     QListWidgetItem,
+    QMessageBox,
     QProgressBar,
     QPushButton,
     QScrollArea,
@@ -51,9 +52,12 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from ..config import (
+    CLIP_FACTORS,
     DEFAULT_SERVICE,
+    MAX_CLIP_PIXELS,
     MAX_RESULTS,
     PLUGIN_NAME,
+    RASTER_COLLECTIONS,
     SEARCH_CRS,
     SERVICES,
     SETTINGS_PREFIX,
@@ -61,6 +65,17 @@ from ..config import (
     search_base_url,
 )
 from ..core.auth import authcfg_exists
+from ..core.clip import (
+    DEFAULT_FORMAT,
+    OUTPUT_FORMATS,
+    ClipJob,
+    ClipTask,
+    clip_extent,
+    grid_size,
+    native_resolution,
+    output_path,
+    uncompressed_bytes,
+)
 from ..core.downloader import DownloadQueue
 from ..core.fonts import FONT_FAMILY
 from ..core.items import (
@@ -109,6 +124,13 @@ class StacDock(QDockWidget):
         self._collections_task: CollectionsTask | None = None
         self._search_task: SearchTask | None = None
         self._queue: DownloadQueue | None = None
+        self._clip_task: ClipTask | None = None
+        self._clip_jobs: list[ClipJob] = []
+        self._clip_total = 0
+        self._clip_paths: list[tuple[str, str]] = []
+        self._clip_failures: list[str] = []
+        self._clip_cancelled = False
+        self._clip_authcfg = ""
         self._rows: dict[tuple[str, str], QTreeWidgetItem] = {}
 
         body = QWidget()
@@ -116,6 +138,7 @@ class StacDock(QDockWidget):
         layout.addWidget(self._build_connection_group())
         layout.addWidget(self._build_search_group())
         layout.addWidget(self._build_results_group())
+        layout.addWidget(self._build_clip_group())
         layout.addWidget(self._build_output_group())
         note = QLabel("Fristående plugin, inte utvecklat av Lantmäteriet.")
         note.setWordWrap(True)
@@ -134,6 +157,9 @@ class StacDock(QDockWidget):
     def cleanup(self) -> None:
         if self._queue:
             self._queue.cancel()
+        self._clip_jobs = []
+        if self._clip_task:
+            self._clip_task.cancel()
         if self._search_task:
             self._search_task.cancel()
         if self._collections_task:
@@ -180,6 +206,7 @@ class StacDock(QDockWidget):
         self.extent_group.setCurrentExtent(self.canvas.extent(), canvas_crs)
         self.extent_group.setOutputExtentFromCurrent()
         self.extent_group.setMapCanvas(self.canvas)
+        self.extent_group.extentChanged.connect(self._update_clip_info)
         layout.addWidget(self.extent_group)
 
         self.date_group = QGroupBox("Tidsfilter")
@@ -218,6 +245,7 @@ class StacDock(QDockWidget):
         self.tree.setMinimumHeight(180)
         self.tree.setHeaderLabels(["Namn", "Samling", "Typ", "Datum", "Storlek"])
         self.tree.itemChanged.connect(self._update_summary)
+        self.tree.itemChanged.connect(self._update_clip_info)
         layout.addWidget(self.tree)
 
         row = QHBoxLayout()
@@ -232,6 +260,38 @@ class StacDock(QDockWidget):
         self.summary_label = QLabel("")
         layout.addWidget(self.summary_label)
         return group
+
+    def _build_clip_group(self) -> QGroupBox:
+        """Options for the topowebb raster map: its items are 140-175 GB
+        whole-country files, so by default only the Utbredning is cut out of
+        the remote file (see core/clip.py). Shown only when results include
+        such items."""
+        self.clip_group = QGroupBox("Rasterkarta (topowebb)")
+        form = QFormLayout(self.clip_group)
+
+        self.clip_mode = QComboBox()
+        self.clip_mode.addItem("Klipp ut området i Utbredning", "clip")
+        self.clip_mode.addItem("Hämta hela filen (140-175 GB)", "full")
+        self.clip_mode.currentIndexChanged.connect(self._update_clip_info)
+        form.addRow("Läge", self.clip_mode)
+
+        self.clip_res = QComboBox()
+        for factor in CLIP_FACTORS:
+            self.clip_res.addItem(f"{factor}×", factor)
+        self.clip_res.currentIndexChanged.connect(self._update_clip_info)
+        form.addRow("Upplösning", self.clip_res)
+
+        self.clip_format = QComboBox()
+        for key, (label, _driver, ext, _opts) in OUTPUT_FORMATS.items():
+            self.clip_format.addItem(f"{label} ({ext})", key)
+        form.addRow("Format", self.clip_format)
+
+        self.clip_info = QLabel("")
+        self.clip_info.setWordWrap(True)
+        form.addRow(self.clip_info)
+
+        self.clip_group.setVisible(False)
+        return self.clip_group
 
     def _build_output_group(self) -> QGroupBox:
         group = QGroupBox("Hämta")
@@ -280,12 +340,24 @@ class StacDock(QDockWidget):
         self.service_combo.setCurrentIndex(max(0, self.service_combo.findData(service)))
         self.output_widget.setFilePath(self.settings.value(self._key("output"), str(Path.home())))
         self.split_ortnamn.setChecked(self.settings.value(self._key("split_ortnamn"), False, type=bool))
+        for combo, name, default in (
+            (self.clip_mode, "clip_mode", "clip"),
+            (self.clip_res, "clip_factor", 1),
+            (self.clip_format, "clip_format", DEFAULT_FORMAT),
+        ):
+            value = self.settings.value(self._key(name), default)
+            if name == "clip_factor":
+                value = int(value)
+            combo.setCurrentIndex(max(0, combo.findData(value)))
 
     def _save_settings(self) -> None:
         self.settings.setValue(self._key("authcfg"), self.auth_select.configId())
         self.settings.setValue(self._key("service"), self.service_combo.currentData())
         self.settings.setValue(self._key("output"), self.output_widget.filePath())
         self.settings.setValue(self._key("split_ortnamn"), self.split_ortnamn.isChecked())
+        self.settings.setValue(self._key("clip_mode"), self.clip_mode.currentData())
+        self.settings.setValue(self._key("clip_factor"), self.clip_res.currentData())
+        self.settings.setValue(self._key("clip_format"), self.clip_format.currentData())
 
     # -- helpers ---------------------------------------------------------
 
@@ -430,6 +502,7 @@ class StacDock(QDockWidget):
         self.tree.clear()
         self.search_status.setText("")
         self._update_summary()
+        self._update_clip_info()
 
     def _fill_results(self) -> None:
         self.tree.blockSignals(True)
@@ -451,6 +524,7 @@ class StacDock(QDockWidget):
         for column in range(self.tree.columnCount()):
             self.tree.resizeColumnToContents(column)
         self._update_summary()
+        self._update_clip_info()
 
     def _checked_items(self) -> list[StacItem]:
         checked = []
@@ -467,9 +541,13 @@ class StacDock(QDockWidget):
             self.tree.topLevelItem(i).setCheckState(COL_NAME, state)
         self.tree.blockSignals(False)
         self._update_summary()
+        self._update_clip_info()
 
     def _update_summary(self, *_args) -> None:
         checked = self._checked_items()
+        if self._clipping(checked):
+            self.summary_label.setText(f"{len(checked)} av {len(self.items)} valda (utklipp)")
+            return
         known = sum(i.size for i in checked if i.size)
         unknown = sum(1 for i in checked if not i.size)
         text = f"{len(checked)} av {len(self.items)} valda, {_format_bytes(known)}"
@@ -477,10 +555,160 @@ class StacDock(QDockWidget):
             text += f" (+{unknown} med okänd storlek)"
         self.summary_label.setText(text)
 
+    # -- topowebb clip ---------------------------------------------------
+
+    def _clipping(self, checked: list[StacItem] | None = None) -> bool:
+        """True when the checked rows are raster maps to be cut out rather
+        than downloaded whole."""
+        checked = self._checked_items() if checked is None else checked
+        return (
+            self.clip_mode.currentData() == "clip"
+            and bool(checked)
+            and all(i.is_raster_map for i in checked)
+        )
+
+    @staticmethod
+    def _format_resolution(resolution: float, epsg: int | None) -> str:
+        text = f"{resolution:.2f}".rstrip("0").rstrip(".").replace(".", ",")
+        return f"{text} m" if epsg == 3006 else f"{text} kartenheter"
+
+    def _update_clip_info(self, *_args) -> None:
+        """Show/hide the topowebb group and refresh the resolution labels and
+        the size estimate for the current extent and selection."""
+        raster_items = [i for i in self.items if i.is_raster_map]
+        self.clip_group.setVisible(bool(raster_items))
+        if not raster_items:
+            return
+        clipping = self.clip_mode.currentData() == "clip"
+        self.clip_res.setEnabled(clipping)
+        self.clip_format.setEnabled(clipping)
+        if not clipping:
+            self.clip_info.setText("Hela filen laddas ned. Välj Klipp ut för att bara hämta området.")
+            return
+
+        checked = [i for i in self._checked_items() if i.is_raster_map]
+        reference = checked[0] if checked else raster_items[0]
+        native = native_resolution(reference)
+        if native:
+            self.clip_res.blockSignals(True)
+            for index in range(self.clip_res.count()):
+                factor = self.clip_res.itemData(index)
+                label = self._format_resolution(native * factor, reference.epsg)
+                self.clip_res.setItemText(index, f"{label} (full)" if factor == 1 else label)
+            self.clip_res.blockSignals(False)
+
+        if not checked:
+            self.clip_info.setText("Markera en eller flera rader att klippa ut.")
+            return
+        extent = self.extent_group.outputExtent()
+        if extent.isEmpty():
+            self.clip_info.setText("Ange en giltig utbredning.")
+            return
+        factor = self.clip_res.currentData()
+        lines = []
+        for item in checked:
+            item_native = native_resolution(item)
+            if not item_native:
+                continue
+            cols, rows = grid_size(clip_extent(extent, item), item_native * factor)
+            lines.append(
+                f"{item.id}: {cols} × {rows} px, högst {_format_bytes(uncompressed_bytes(cols, rows))}"
+            )
+        self.clip_info.setText("\n".join(lines))
+
+    def _start_clip(self, items: list[StacItem], authcfg: str, output: str) -> None:
+        extent = self.extent_group.outputExtent()
+        if extent.isEmpty():
+            self._message("Ange en giltig utbredning.", Qgis.MessageLevel.Warning)
+            return
+        factor = self.clip_res.currentData()
+        fmt = self.clip_format.currentData()
+
+        jobs: list[ClipJob] = []
+        total_bytes = 0
+        for item in items:
+            native = native_resolution(item)
+            if not native:
+                self._message(f"{item.id}: okänd upplösning, kan inte klippas.", Qgis.MessageLevel.Warning)
+                return
+            item_extent = clip_extent(extent, item)
+            resolution = native * factor
+            cols, rows = grid_size(item_extent, resolution)
+            if cols * rows > MAX_CLIP_PIXELS:
+                self._message(
+                    f"{item.id}: {cols} × {rows} px är för stort. Minska utbredningen "
+                    "eller välj en lägre upplösning.",
+                    Qgis.MessageLevel.Warning,
+                )
+                return
+            total_bytes += uncompressed_bytes(cols, rows)
+            path = output_path(Path(output), item, item_extent, resolution, fmt)
+            jobs.append(ClipJob(item, item_extent, resolution, fmt, path))
+
+        if total_bytes > WARN_BYTES:
+            answer = QMessageBox.question(
+                self,
+                PLUGIN_NAME,
+                f"Utklippet blir som mest {_format_bytes(total_bytes)} okomprimerat och kan ta lång tid. Fortsätta?",
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+        self._save_settings()
+
+        self._clip_jobs = jobs
+        self._clip_total = len(jobs)
+        self._clip_paths = []
+        self._clip_failures = []
+        self._clip_cancelled = False
+        self._clip_authcfg = authcfg
+        self._begin_download_ui()
+        self._run_next_clip()
+
+    def _run_next_clip(self) -> None:
+        if self._clip_cancelled or not self._clip_jobs:
+            self._finish_clips()
+            return
+        job = self._clip_jobs.pop(0)
+        index = self._clip_total - len(self._clip_jobs)
+        task = ClipTask(job, self._clip_authcfg)
+        task.progressChanged.connect(lambda pct, i=index, j=job: self._on_clip_progress(i, j, pct))
+        task.ended.connect(lambda path, error, j=job: self._on_clip_ended(j, path, error))
+        self._clip_task = task
+        self.progress.setRange(0, 1000)
+        self.progress.setValue(0)
+        self.progress_label.setText(f"Klipper ut {index} av {self._clip_total}: {job.item.id}…")
+        QgsApplication.taskManager().addTask(task)
+
+    def _on_clip_progress(self, index: int, job: ClipJob, percent: float) -> None:
+        self.progress.setRange(0, 1000)
+        self.progress.setValue(int(percent * 10))
+        self.progress_label.setText(
+            f"Klipper ut {index} av {self._clip_total}: {job.item.id} ({percent:.0f} %)"
+        )
+
+    def _on_clip_ended(self, job: ClipJob, path: str, error: str) -> None:
+        self._clip_task = None
+        if path:
+            self._clip_paths.append((job.item.collection, path))
+        elif error:
+            self._clip_failures.append(f"{job.item.id}: {error}")
+        self._run_next_clip()
+
+    def _finish_clips(self) -> None:
+        paths, failures = self._clip_paths, list(self._clip_failures)
+        cancelled = self._clip_cancelled
+        self._clip_jobs = []
+        self._finish_download_ui()
+
+        if self.add_to_project.isChecked():
+            for _collection, path in paths:
+                self._add_raster(path, QgsProject.instance(), failures)
+        self._report_result(len(paths), failures, cancelled, "utklipp klara")
+
     # -- download --------------------------------------------------------
 
     def _start_download(self) -> None:
-        if self._queue:
+        if self._queue or self._clip_task:
             return
         authcfg = self._authcfg_or_warn()
         if not authcfg:
@@ -494,10 +722,12 @@ class StacDock(QDockWidget):
             self._message("Välj en målmapp.", Qgis.MessageLevel.Warning)
             return
 
+        if self._clipping(items):
+            self._start_clip(items, authcfg, output)
+            return
+
         total = sum(i.size for i in items if i.size)
         if total > WARN_BYTES:
-            from qgis.PyQt.QtWidgets import QMessageBox
-
             answer = QMessageBox.question(
                 self,
                 PLUGIN_NAME,
@@ -524,6 +754,10 @@ class StacDock(QDockWidget):
         self.progress_label.setText("Avbryter…")
         if self._queue:
             self._queue.cancel()
+        if self._clip_task:
+            self._clip_cancelled = True
+            self._clip_jobs = []
+            self._clip_task.cancel()
 
     def _on_download_progress(self, index: int, count: int, name: str, received: int, total: int) -> None:
         if total > 0:
@@ -539,10 +773,7 @@ class StacDock(QDockWidget):
         queue, self._queue = self._queue, None
         if queue:
             queue.deleteLater()
-        self.download_btn.setVisible(True)
-        self.cancel_btn.setVisible(False)
-        self.progress.setVisible(False)
-        self.progress_label.setText("")
+        self._finish_download_ui()
 
         if self.add_to_project.isChecked():
             failures = list(failures)
@@ -556,22 +787,33 @@ class StacDock(QDockWidget):
                     Qgis.MessageLevel.Warning,
                 )
 
+        self._report_result(len(paths), failures, cancelled, "filer hämtade")
+
+    def _finish_download_ui(self) -> None:
+        self.download_btn.setVisible(True)
+        self.cancel_btn.setVisible(False)
+        self.progress.setVisible(False)
+        self.progress_label.setText("")
+
+    def _report_result(self, count: int, failures: list, cancelled: bool, noun: str) -> None:
         if failures:
             self._message(
-                f"{len(paths)} filer hämtade, {len(failures)} misslyckades: " + "; ".join(failures[:3]),
+                f"{count} {noun}, {len(failures)} misslyckades: " + "; ".join(failures[:3]),
                 Qgis.MessageLevel.Warning,
             )
         elif cancelled:
-            self._message(f"Avbrutet. {len(paths)} filer hann hämtas.", Qgis.MessageLevel.Warning)
+            self._message(f"Avbrutet. {count} {noun}.", Qgis.MessageLevel.Warning)
         else:
-            self._message(f"{len(paths)} filer hämtade.", Qgis.MessageLevel.Success)
+            self._message(f"{count} {noun}.", Qgis.MessageLevel.Success)
 
     def _add_to_project(
         self, collection: str, path: str, failures: list, font_missing: list
     ) -> None:
         project = QgsProject.instance()
         ext = Path(path).suffix.lower()
-        if ext in ARCHIVE_EXTENSIONS:
+        if collection in RASTER_COLLECTIONS:
+            self._add_raster(path, project, failures)
+        elif ext in ARCHIVE_EXTENSIONS:
             self._add_zip_contents(collection, path, project, failures, font_missing)
         elif ext in RASTER_EXTENSIONS:
             self._add_raster(path, project, failures)

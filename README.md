@@ -9,8 +9,10 @@ Byggnader (buildings), Marktäcke (land cover), Fastighetsindelning (cadastral
 boundaries), Belägenhetsadresser (addresses), Ortnamn (place names) and
 Kommun/lan/rike (municipality/county/country). Covers Sweden only.
 
-STAC-karta (raster maps) is not offered - see
-[STAC-karta is disabled](#stac-karta-is-disabled) below.
+It also offers the open **topowebb** raster map from STAC-karta
+(*Topografisk webbkarta Nedladdning, raster*). Those files are 140-175 GB each,
+so the plugin cuts out just the extent you choose instead of downloading
+everything - see [Topowebb raster map](#topowebb-raster-map) below.
 
 Downloaded layers are automatically styled with Lantmäteriet's own official
 QGIS symbology where a style has been extracted for that collection's
@@ -44,7 +46,7 @@ Opened from the Web menu or the web toolbar (button "Geodata Downloader
 | Autentisering | Authentication | QGIS' own auth config picker (`QgsAuthConfigSelect`); configs can also be created/edited here directly |
 | Ny Lantmäteriet-inloggning... | New Lantmäteriet login... | Opens the login dialog (see below) |
 | Sökning | Search | Group with the search controls |
-| Tjänst | Service | Service picker (currently only STAC-vektor, see below) |
+| Tjänst | Service | Service picker: STAC-vektor (vector data, default) or STAC-karta (the topowebb raster map, see below) |
 | Samlingar | Collections | Checkable list of the service's collections, e.g. Byggnader, Marktäcke |
 | Utbredning | Extent | Standard QGIS extent widget (`QgsExtentGroupBox`): current map view, a layer's extent, drawing a box, or manual coordinates |
 | Tidsfilter | Time filter | Optional checkable date-from/date-to range |
@@ -53,6 +55,10 @@ Opened from the Web menu or the web toolbar (button "Geodata Downloader
 | Träffar | Hits | Group listing the search results as a table (name, collection, type, date, size). The "name" column shows the kommun name and code (e.g. "Skellefteå (2482)") when the item's STAC title follows Lantmäteriet's "... för `<kommun>` kommun" phrasing, otherwise just the item id |
 | Markera alla | Select all | Checks every hit |
 | Avmarkera alla | Deselect all | Unchecks every hit |
+| Rasterkarta (topowebb) | Raster map (topowebb) | Group shown only when the hits are topowebb items (STAC-karta); see [Topowebb raster map](#topowebb-raster-map) |
+| Läge | Mode | "Klipp ut området i Utbredning" (clip the extent out of the remote file, default) or "Hämta hela filen (140-175 GB)" (download the whole file) |
+| Upplösning | Resolution | Pixel size of the clip, from full resolution (0.5 m for EPSG:3006) down in powers of two; coarser output is read from the file's overview levels and is much faster |
+| Format | Format | Output format of the clip: GeoTIFF (default, compressed) or GeoPackage |
 | Hämta | Download | Group with the download controls |
 | (file picker) | Target folder | `QgsFileWidget` for the output directory |
 | Lägg till i projektet när klart | Add to project when done | Adds the downloaded layers to the QGIS project once finished (extracting vector `.zip` assets first) |
@@ -87,6 +93,12 @@ Manager; the key and secret are stored encrypted by QGIS, not by the plugin.
 | Fil {n} av {N}: {namn} (...) | File {n} of {N}: {name} (...) | Progress while downloading |
 | Avbryter... | Cancelling... | Shown while a download is being cancelled |
 | {n} filer hämtade. | {n} files downloaded. | Download finished successfully |
+| Klipper ut {n} av {N}: {id} ({p} %) | Cutting out {n} of {N}: {id} ({p} %) | Progress while clipping a topowebb extent |
+| {n} utklipp klara. | {n} clips done. | Clipping finished successfully |
+| {id}: {c} × {r} px är för stort. Minska utbredningen eller välj en lägre upplösning. | {id}: {c} × {r} px is too large. Reduce the extent or pick a lower resolution. | The requested clip exceeds 4 billion pixels |
+| Utklippet blir som mest {size} okomprimerat och kan ta lång tid. Fortsätta? | The clip will be at most {size} uncompressed and may take a long time. Continue? | Confirmation before a clip larger than 2 GB uncompressed |
+| Området ligger utanför kartans utbredning. | The area is outside the map's extent. | The clip extent does not overlap the topowebb file |
+| Kunde inte öppna kartfilen på distans... | Could not open the map file remotely... | The remote GeoPackage could not be opened, usually because the authentication has no access to STAC-karta |
 | åtkomst nekad. Sökningen fungerade, men... | Access denied. The search worked, but... | The download host returns HTTP 403 (Forbidden): the account is authenticated but not entitled to that collection |
 | Ange både Consumer Key och Consumer Secret. | Enter both Consumer Key and Consumer Secret. | One of the two login fields is empty |
 
@@ -121,30 +133,47 @@ Live-verified with real keys: an account with STAC-vektor ordered got
 successfully downloaded, unzipped and added `belagenhetsadresser` as a
 layer - i.e. entitlement is checked per collection, not just per service.
 
-## STAC-karta is disabled
+## Topowebb raster map
 
-STAC-karta is not offered in the interface right now (`SERVICES` in
-[`config.py`](lm_stac_karta_vektor/config.py) excludes it explicitly) -
-none of its three collections can be usefully fetched through the plugin:
+STAC-karta has three collections:
 
 - **`nmk50`/`nmk250`** (Nationell militär karta, national military map) are
-  access-restricted and require a system account with a separate order -
-  the same thing that keeps them out of the collection list even if
-  STAC-karta is turned back on (`RESTRICTED_COLLECTIONS`).
-- **`topowebb`** (CC-BY-4.0, the only open collection) is **not tiled by
-  area**: `GET /collections/topowebb` reports the whole globe as its
-  extent, and a search on a bbox in Kiruna returned the exact same 4 hits
-  as a search in Skåne - the same 4 whole-of-Sweden files (145-175 GB each,
-  one per style/projection variant) regardless of where you search.
-  Lantmäteriet's own Geotorget product page for it explicitly says it
-  can't be ordered there and points to an FTP mirror instead
-  (`ftp://download-opendata.lantmateriet.se/`) - i.e. it isn't meant to be
-  fetched through the API right now.
+  access-restricted and require a system account with a separate order, so
+  they are hidden from the collection list (`RESTRICTED_COLLECTIONS`).
+- **`topowebb`** (*Topografisk webbkarta Nedladdning, raster*, CC-BY-4.0) is
+  the one open collection. It is **not tiled by area**: it has four items
+  (colour or greyscale, each in EPSG:3006 and EPSG:3857), and a search on any
+  bbox returns those same four. Each item is one GeoPackage of raster tiles of
+  140-175 GB covering all of Sweden (EPSG:3857: the whole world).
 
-Turn it back on by removing the filter in `config.py`
-(`SERVICES = {k: v for k, v in _ALL_SERVICES.items() if k != "stac-karta"}`)
-if Lantmäteriet starts tiling `topowebb` or otherwise makes STAC-karta
-suitable for a search-and-download interface.
+Because the files are so large, the **Rasterkarta (topowebb)** group offers
+two modes:
+
+1. **Klipp ut området i Utbredning** (default): cut the chosen extent out of
+   the remote file. The download server answers HTTP Range requests, so GDAL
+   can open the GeoPackage through `/vsicurl/` and read only the tiles that
+   the extent needs. `core/clip.py` does this with
+   `QgsRasterLayer("/vsicurl/<href> authcfg='<id>'")` and `QgsRasterFileWriter`
+   in a `QgsTask`. The auth config's HTTP headers (Basic or OAuth2 Bearer,
+   from `QgsAuthManager.updateNetworkRequest`) are handed to GDAL through the
+   thread-local `GDAL_HTTP_HEADERS` option, because `authcfg` in a `/vsicurl/`
+   URI works for Basic but not for OAuth2. The result is a local, compressed GeoTIFF (or GeoPackage) with
+   4 bands (RGBA) in the item's CRS. The resolution can be lowered in powers
+   of two; coarser output is read from the file's overview levels.
+2. **Hämta hela filen**: the ordinary download queue, with the usual
+   confirmation for anything over 2 GB.
+
+Verified with both the plugin's usual OAuth2 login (Consumer Key/Secret) and
+a Basic-authentication config. Measured against the production service
+(2026-10-28): a 2 × 2 km extent at the full 0.5 m resolution
+(4000 × 4000 px) took about 10 s; 100 × 100 km at 2000 × 2000 px took about
+10 s; a 0.9 km square at full resolution took under a second. Clips larger
+than 4 billion pixels are refused, and anything over 2 GB uncompressed asks
+for confirmation first.
+
+EPSG:3006 files have a full resolution of 0.5 m. EPSG:3857 files have
+2^25 pixels across the world, about 1.19 map units per pixel (roughly 0.6 m
+at Swedish latitudes), and their resolution is shown in map units.
 
 ## Styling
 
@@ -216,8 +245,7 @@ warning is shown once instead of silently rendering the wrong symbols.
 
 ## Catalog structure (STAC)
 
-Both services follow STAC/OGC API - Features (including STAC-karta, which
-is currently disabled in the interface, see above):
+Both services follow STAC/OGC API - Features:
 
 - `GET /collections` - lists collections.
 - `POST /search` - search items (`collections`, `bbox`, `datetime`,

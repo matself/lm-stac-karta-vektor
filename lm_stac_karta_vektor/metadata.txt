@@ -11,7 +11,9 @@ about=Search and download open vector data directly from Lantmäteriet's (the Sw
     mapping, cadastral and land registration authority) STAC-vektor service: Byggnader
     (buildings), Marktäcke (land cover), Fastighetsindelning (cadastral boundaries),
     Belägenhetsadresser (addresses), Ortnamn (place names) and Kommun/lan/rike
-    (municipality/county/country). Independent plugin, not developed by Lantmäteriet.
+    (municipality/county/country), plus the open Topografisk webbkarta raster map
+    (topowebb, STAC-karta), which is cut out for a chosen extent straight from the
+    140-175 GB source files instead of downloaded whole. Independent plugin, not developed by Lantmäteriet.
     Sibling plugin to Geodata: Ortofoto & höjd (Lantmäteriet), which covers
     orthophoto and elevation data. Search works with any valid key; download requires a system
     account that has ordered the right product on Geotorget. Login goes through
@@ -33,7 +35,7 @@ changelog=1.0.3: Added official Topo10 styling for downloaded Byggnader (buildin
     
 category=Plugin
 icon=icon.svg
-tags=lantmateriet,stac,geodata,vector,download,sweden,geotorget,open data
+tags=lantmateriet,stac,geodata,vector,raster,download,sweden,geotorget,open data
 license=GPL-3.0-or-later
 
 experimental=False

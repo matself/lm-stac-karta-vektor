@@ -14,6 +14,8 @@ from __future__ import annotations
 import json
 
 from qgis.core import QgsApplication, QgsAuthMethodConfig
+from qgis.PyQt.QtCore import QUrl
+from qgis.PyQt.QtNetwork import QNetworkRequest
 
 from ..config import OAUTH_ENDPOINT_URL
 
@@ -59,6 +61,25 @@ def create_client_credentials_config(name: str, client_id: str, client_secret: s
     if not ok or not config.id():
         raise RuntimeError("Kunde inte spara autentiseringskonfigurationen.")
     return config.id()
+
+
+def auth_headers(authcfg: str, url: str) -> list[str]:
+    """HTTP headers ("Name: value") that QGIS would add to a request to `url`
+    for this auth config, e.g. "Authorization: Bearer ..." for OAuth2.
+
+    Call from the main thread: the OAuth2 method may need to fetch a token.
+    Used for GDAL, whose /vsicurl/ only gets Basic credentials from `authcfg`.
+    """
+    request = QNetworkRequest(QUrl(url))
+    result = QgsApplication.authManager().updateNetworkRequest(request, authcfg)
+    # SIP_INOUT: some QGIS versions return (bool, request), others just bool.
+    if isinstance(result, tuple):
+        ok, request = result
+    else:
+        ok = result
+    if not ok:
+        return []
+    return [f"{bytes(name).decode()}: {bytes(request.rawHeader(name)).decode()}" for name in request.rawHeaderList()]
 
 
 def authcfg_exists(authcfg: str) -> bool:

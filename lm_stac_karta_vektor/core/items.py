@@ -6,6 +6,8 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from ..config import RASTER_COLLECTIONS
+
 RASTER_EXTENSIONS = {".tif", ".tiff", ".jp2"}
 ARCHIVE_EXTENSIONS = {".zip"}
 DIRECT_VECTOR_EXTENSIONS = {".gpkg", ".shp", ".gml", ".geojson", ".json"}
@@ -17,6 +19,8 @@ DIRECT_VECTOR_EXTENSIONS = {".gpkg", ".shp", ".gml", ".geojson", ".json"}
 # The item id is the kommunkod itself (e.g. "2482"), so the title is the
 # only place the human-readable name shows up.
 _KOMMUN_RE = re.compile(r"\b(?:för|i)\s+(.+?)\s+kommun\b", re.IGNORECASE)
+_EPSG_SUFFIX_RE = re.compile(r"-(\d{4,5})$")
+_CRS_NAMES = {3006: "SWEREF 99 TM", 3857: "Web Mercator"}
 
 
 @dataclass(frozen=True)
@@ -50,11 +54,28 @@ class StacItem:
     def label(self) -> str:
         """What to show for this item in a results list: the kommun name
         with its code if we could tell them apart, otherwise just the id."""
+        if self.is_raster_map and self.epsg:
+            style = "Nedtonad (grå)" if "nedtonad" in self.id else "Färg"
+            crs = _CRS_NAMES.get(self.epsg, f"EPSG:{self.epsg}")
+            return f"{style}, {crs} ({self.id})"
         kommun = self.kommun
         return f"{kommun} ({self.id})" if kommun else self.id
 
     @property
+    def is_raster_map(self) -> bool:
+        """A raster-tile GeoPackage (topowebb), not a vector `.gpkg`."""
+        return self.collection in RASTER_COLLECTIONS
+
+    @property
+    def epsg(self) -> int | None:
+        """EPSG code from the "…-3006" / "…-3857" item id suffix."""
+        match = _EPSG_SUFFIX_RE.search(self.id)
+        return int(match.group(1)) if match else None
+
+    @property
     def kind(self) -> str:
+        if self.is_raster_map:
+            return "raster (hel fil)"
         ext = self.extension
         if ext in RASTER_EXTENSIONS:
             return "raster"
