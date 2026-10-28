@@ -4,6 +4,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-28
+
 ### Added
 
 - Support for the open `topowebb` raster map (STAC-karta, "Topografisk webbkarta Nedladdning, raster"). The items are 140-175 GB whole-country GeoPackages, so the plugin can cut out just the chosen extent straight from the remote file (HTTP Range via GDAL `/vsicurl/`), as a compressed GeoTIFF or GeoPackage at a selectable resolution, in a background task with progress and cancel. Downloading the whole file is still available.

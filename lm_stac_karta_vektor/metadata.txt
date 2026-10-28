@@ -2,8 +2,8 @@
 name=Geodata: Vektor (Lantmäteriet)
 qgisMinimumVersion=3.44
 qgisMaximumVersion=4.99
-description=Search and download open vector data from Lantmäteriet's STAC-vektor service.
-version=1.0.3
+description=Search and download open vector data, and cut out areas of the topographic web map, from Lantmäteriet's STAC services.
+version=1.1.0
 author=Mats Elfström
 email=mats.elfstrom@gmail.com
 
@@ -29,7 +29,8 @@ about=Search and download open vector data directly from Lantmäteriet's (the Sw
 tracker=https://github.com/matself/lm-stac-karta-vektor/issues
 repository=https://github.com/matself/lm-stac-karta-vektor
 homepage=https://github.com/matself/lm-stac-karta-vektor
-changelog=1.0.3: Added official Topo10 styling for downloaded Byggnader (building areas), including features with illustrative position.
+changelog=1.1.0: Added the open topographic web map (topowebb, STAC-karta). Instead of downloading the 140-175 GB source files, the plugin cuts out the chosen extent as a GeoTIFF or GeoPackage at a selectable resolution, with the area outlined on the map canvas. Also a shorter dock, mouse-wheel protection for combo boxes and date fields, and a corrected default time filter.
+    1.0.3: Added official Topo10 styling for downloaded Byggnader (building areas), including features with illustrative position.
     1.0.2: Renamed an internal constant to avoid a Bandit false positive. No functional changes.
     1.0.1: Moved the toolbar icon and menu entry from the Web toolbar/menu to the Plugins toolbar/menu.
     
