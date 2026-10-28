@@ -19,6 +19,7 @@ from qgis.core import (
     Qgis,
     QgsApplication,
     QgsCoordinateReferenceSystem,
+    QgsGeometry,
     QgsLayerTreeGroup,
     QgsProject,
     QgsProviderRegistry,
@@ -27,8 +28,9 @@ from qgis.core import (
     QgsSettings,
     QgsVectorLayer,
 )
-from qgis.gui import QgsAuthConfigSelect, QgsExtentGroupBox, QgsFileWidget
+from qgis.gui import QgsAuthConfigSelect, QgsExtentGroupBox, QgsFileWidget, QgsRubberBand
 from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import QColor
 from qgis.PyQt.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -71,6 +73,7 @@ from ..core.clip import (
     ClipJob,
     ClipTask,
     clip_extent,
+    item_crs,
     grid_size,
     native_resolution,
     output_path,
@@ -151,6 +154,14 @@ class StacDock(QDockWidget):
         scroll.setWidget(body)
         self.setWidget(scroll)
 
+        # Outlines the area a topowebb clip will cover; the extent widget
+        # itself draws nothing while it follows the map view.
+        self._extent_band = QgsRubberBand(self.canvas, Qgis.GeometryType.Polygon)
+        self._extent_band.setColor(QColor(220, 30, 30))
+        self._extent_band.setFillColor(QColor(220, 30, 30, 30))
+        self._extent_band.setWidth(2)
+        self.visibilityChanged.connect(self._update_clip_info)
+
         self._restore_settings()
         self._reload_collections()
 
@@ -160,6 +171,8 @@ class StacDock(QDockWidget):
         self._clip_jobs = []
         if self._clip_task:
             self._clip_task.cancel()
+        self._extent_band.reset(Qgis.GeometryType.Polygon)
+        self.canvas.scene().removeItem(self._extent_band)
         if self._search_task:
             self._search_task.cancel()
         if self._collections_task:
@@ -575,6 +588,7 @@ class StacDock(QDockWidget):
     def _update_clip_info(self, *_args) -> None:
         """Show/hide the topowebb group and refresh the resolution labels and
         the size estimate for the current extent and selection."""
+        self._extent_band.reset(Qgis.GeometryType.Polygon)
         raster_items = [i for i in self.items if i.is_raster_map]
         self.clip_group.setVisible(bool(raster_items))
         if not raster_items:
@@ -597,10 +611,13 @@ class StacDock(QDockWidget):
                 self.clip_res.setItemText(index, f"{label} (full)" if factor == 1 else label)
             self.clip_res.blockSignals(False)
 
+        extent = self.extent_group.outputExtent()
+        if not extent.isEmpty() and self.isVisible():
+            band_extent = clip_extent(extent, reference)
+            self._extent_band.setToGeometry(QgsGeometry.fromRect(band_extent), item_crs(reference))
         if not checked:
             self.clip_info.setText("Markera en eller flera rader att klippa ut.")
             return
-        extent = self.extent_group.outputExtent()
         if extent.isEmpty():
             self.clip_info.setText("Ange en giltig utbredning.")
             return

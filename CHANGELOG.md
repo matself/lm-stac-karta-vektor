@@ -7,6 +7,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Support for the open `topowebb` raster map (STAC-karta, "Topografisk webbkarta Nedladdning, raster"). The items are 140-175 GB whole-country GeoPackages, so the plugin can cut out just the chosen extent straight from the remote file (HTTP Range via GDAL `/vsicurl/`), as a compressed GeoTIFF or GeoPackage at a selectable resolution, in a background task with progress and cancel. Downloading the whole file is still available.
+- The area a topowebb clip will cover is outlined on the map canvas (in the file's coordinate system) while the clip mode is active, and follows the extent widget, the selected rows and the dock's visibility.
 
 ### Changed
 
