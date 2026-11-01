@@ -16,8 +16,7 @@ everything - see [Topowebb raster map](#topowebb-raster-map) below.
 
 Downloaded layers are automatically styled with Lantmäteriet's own official
 QGIS symbology where a style has been extracted for that collection's
-tables (currently `fastighetsindelning`) - see
-[Official styling](#official-styling) below.
+tables (see [Official styling](#official-styling) below for which ones).
 
 Sibling plugin to [`matself/LM-STAC-Downloader`](https://github.com/matself/LM-STAC-Downloader)
 ("Geodata: Ortofoto & höjd (Lantmäteriet)"), which covers orthophoto and elevation
@@ -34,9 +33,10 @@ walkthrough is in [docs/anvandning.md](docs/anvandning.md).
 
 ## User interface
 
-Opened from the Web menu or the web toolbar (button "Geodata Downloader
-(Lantmäteriet) - STAC-vektor"). The dock panel has four groups: Anslutning
-(connection), Sökning (search), Träffar (hits) and Hämta (download).
+Opened from the Plugins menu or the Plugins toolbar (button "Geodata: Vektor
+(Lantmäteriet)"). The dock panel has up to five groups: Anslutning
+(connection), Sökning (search), Träffar (hits), Rasterkarta (topowebb) (only
+shown when topowebb hits are listed) and Hämta (download).
 
 ### Main dock panel
 
@@ -219,6 +219,8 @@ Currently covers:
   official Lantmäteriet style
 - `marktacke` (all 3 tables: `mark`, `markkantlinje`, `sankmark`) -
   official Lantmäteriet style
+- `byggnader` (the `byggnad` table) - official Lantmäteriet style (Topo10,
+  rule-based on building type)
 - `kommun-lan-rike` (all 3 tables: `kommun`, `lan`, `rike`) - self-designed,
   no official style exists
 - `ortnamn` - official Lantmäteriet style, adapted from Topo10's
